@@ -1,0 +1,33 @@
+# configuration.yaml:
+
+input_number:
+  fanspeed:    
+    name: fan_speed
+    min: 0
+    max: 100
+    step: 1
+    icon: mdi:brightness-5
+    unit_of_measurement: '%'
+
+automation:
+  - alias: FanSpeed
+    trigger:
+      platform: state
+      entity_id: input_number.fanspeed
+    action:
+      service: mqtt.publish
+      data_template:
+        topic: 'esp/test/speed'
+        retain: true
+        payload: "{{ states.input_number.fanspeed.state | int }}"
+
+# MQTT in (subscribe)        
+  - alias: Set fanspeed slider
+    trigger:
+      platform: mqtt
+      topic: "esp/test/speed"
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.fanspeed
+        value: '{{ trigger.payload | int }}'
