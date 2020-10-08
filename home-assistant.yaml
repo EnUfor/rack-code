@@ -1,8 +1,37 @@
 # configuration.yaml:
 
+sensor:
+  - platform: mqtt
+    name: "Rack Inlet Temperature"
+    state_topic: "rack/inlet/temp"
+    unit_of_measurement: "°F"
+
+  - platform: mqtt
+    name: "Rack Outlet Temperature"
+    state_topic: "rack/outlet/temp"
+    unit_of_measurement: "°F"
+
+  - platform: mqtt
+    name: "Rack Inlet Humidity"
+    state_topic: "rack/inlet/humidity"
+    unit_of_measurement: "%"
+
+  - platform: mqtt
+    name: "Rack Outlet Humidity"
+    state_topic: "rack/outlet/humidity"
+    unit_of_measurement: "%"
+
 input_number:
-  fanspeed:    
-    name: fan_speed
+  inlet_fan_speed:    
+    name: "Inlet Fan Speed"
+    min: 0
+    max: 100
+    step: 1
+    icon: mdi:brightness-5
+    unit_of_measurement: '%'
+    
+  outlet_fan_speed:    
+    name: "Outlet Fan Speed"
     min: 0
     max: 100
     step: 1
@@ -10,24 +39,45 @@ input_number:
     unit_of_measurement: '%'
 
 automation:
-  - alias: FanSpeed
+  - alias: inletfan
     trigger:
       platform: state
-      entity_id: input_number.fanspeed
+      entity_id: input_number.inlet_fan_speed
     action:
       service: mqtt.publish
       data_template:
-        topic: 'esp/test/speed'
+        topic: 'rack/inlet/fan_speed'
         retain: true
-        payload: "{{ states.input_number.fanspeed.state | int }}"
+        payload: "{{ states.input_number.inlet_fan_speed.state | int }}"
 
+  - alias: outletfan
+    trigger:
+      platform: state
+      entity_id: input_number.outlet_fan_speed
+    action:
+      service: mqtt.publish
+      data_template:
+        topic: 'rack/outlet/fan_speed'
+        retain: true
+        payload: "{{ states.input_number.outlet_fan_speed.state | int }}"
+        
 # MQTT in (subscribe)        
-  - alias: Set fanspeed slider
+  - alias: Set outlet fan speed slider
     trigger:
       platform: mqtt
-      topic: "esp/test/speed"
+      topic: "rack/outlet/fan_speed"
     action:
       service: input_number.set_value
       data_template:
-        entity_id: input_number.fanspeed
+        entity_id: input_number.outlet_fan_speed
+        value: '{{ trigger.payload | int }}'
+
+  - alias: Set inlet fan speed slider
+    trigger:
+      platform: mqtt
+      topic: "rack/inlet/fan_speed"
+    action:
+      service: input_number.set_value
+      data_template:
+        entity_id: input_number.inlet_fan_speed
         value: '{{ trigger.payload | int }}'
