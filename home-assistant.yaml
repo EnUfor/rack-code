@@ -1,3 +1,16 @@
+# Lovelace UI
+
+entities:
+  - entity: switch.rack_manual_fan
+  - entity: input_number.inlet_fan_speed
+  - entity: input_number.outlet_fan_speed
+  - entity: sensor.rack_inlet_temperature
+  - entity: sensor.rack_outlet_temperature
+  - entity: sensor.rack_inlet_humidity
+  - entity: sensor.rack_outlet_humidity
+type: entities
+title: Rack
+
 # configuration.yaml:
 
 sensor:
