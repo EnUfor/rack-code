@@ -3,7 +3,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <cactus_io_BME280_I2C.h>
-#include <config.h>
+#include "config.h" // Turns out you need to use quotes for relative imports (2 hrs wasted)
 
 // Create two BME280 instances
 // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
@@ -23,42 +23,9 @@ const int LEDPin    = 16; // D0 (also pin for 2nd onboard LED). GPIO2 (D4) is ot
 
 int pwmValue = 1024;    // Initial pwm
 
-const char* mqttServer = MQTT_SERVER;     // MQTT broker
-const int mqttPort = MQTT_PORT;           // MQTT broker port    
-const char* mqttUser = MQTT_USER;         // MQTT username
-const char* mqttPassword = MQTT_PASSWORD; // MQTT password
-
-// Initiate WiFi / MQTT. Change the client name if you have multiple ESPs
+// Initiate WiFi & MQTT. Change the client name if you have multiple ESPs
 WiFiClient wificlient;
 PubSubClient client(wificlient);
-
-// Connects ESP8266 to Wi-Fi
-void connect_wifi() {
-  WiFi.begin(SSID, WIFI_PASSWORD);
-
-  Serial.println((String)"Connecting to SSID: " + SSID);
-
-  int i = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print((String)++i + "...");
-  }
-  Serial.println('\n');
-
-  Serial.println((String)"Connected to SSID: " + SSID);
-  Serial.print("IP Address: "); Serial.print(WiFi.localIP());
-  Serial.println('\n');
-}
-
-void connect_MQTT() {
-  Serial.println((String)"Connecting to MQTT: " + mqttServer);
-  if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
-    Serial.println("Connected to MQTT");
-  } else {
-    Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
-    // delay(2000);
-  }
-}
 
 void setup() {
   delay(2000);
@@ -86,8 +53,8 @@ void setup() {
   
   connect_wifi();
   
-  // Connect to MQTT
-  client.setServer(mqttServer, mqttPort);
+  // Initialize MQTT client
+  client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);       // Run callback function for when MQTT message received
 
   connect_MQTT();
@@ -188,22 +155,47 @@ void temp() {
     Serial.println("Not Connected");
   }
 
-
   Serial.println(); Serial.println();
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
- 
   Serial.print("Message arrived in topic: ");
   Serial.println(topic);
- 
+
   Serial.print("Message:");
   for (int i = 0; i < length; i++) {
     Serial.print((char)payload[i]);
   }
- 
+
   Serial.println();
   Serial.println("-----------------------");
-  
-  //https://community.home-assistant.io/t/arduino-relay-switches-over-wifi-controlled-via-hass-mqtt-comes-with-ota-support/13439
+}
+
+// Connects ESP8266 to Wi-Fi
+void connect_wifi() {
+  WiFi.begin(SSID, WIFI_PASSWORD);
+
+  Serial.println((String)"Connecting to SSID: " + SSID);
+
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print((String)++i + "...");
+  }
+  Serial.println('\n');
+
+  Serial.println((String)"Connected to SSID: " + SSID);
+  Serial.print("IP Address: "); Serial.print(WiFi.localIP());
+  Serial.println('\n');
+}
+
+// Connects to MQTT broker
+void connect_MQTT() {
+  Serial.println((String)"Connecting to MQTT: " + MQTT_SERVER);
+  if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD)) {
+    Serial.println("Connected to MQTT");
+  } else {
+    Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
+    // delay(2000);
+  }
 }
