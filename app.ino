@@ -3,7 +3,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <cactus_io_BME280_I2C.h>
-#include "config.h"
+#include <config.h>
 
 // Create two BME280 instances
 // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
@@ -23,8 +23,6 @@ const int LEDPin    = 16; // D0 (also pin for 2nd onboard LED). GPIO2 (D4) is ot
 
 int pwmValue = 1024;    // Initial pwm
 
-const char* ssid = SSID;                  // WiFi SSID
-const char* password = WIFI_PASSWORD;     // WiFi password
 const char* mqttServer = MQTT_SERVER;     // MQTT broker
 const int mqttPort = MQTT_PORT;           // MQTT broker port    
 const char* mqttUser = MQTT_USER;         // MQTT username
@@ -34,8 +32,36 @@ const char* mqttPassword = MQTT_PASSWORD; // MQTT password
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
+// Connects ESP8266 to Wi-Fi
+void connect_wifi() {
+  WiFi.begin(SSID, WIFI_PASSWORD);
+
+  Serial.println((String)"Connecting to SSID: " + SSID);
+
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print((String)++i + "...");
+  }
+  Serial.println('\n');
+
+  Serial.println((String)"Connected to SSID: " + SSID);
+  Serial.print("IP Address: "); Serial.print(WiFi.localIP());
+  Serial.println('\n');
+}
+
+void connect_MQTT() {
+  Serial.println((String)"Connecting to MQTT: " + mqttServer);
+  if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
+    Serial.println("Connected to MQTT");
+  } else {
+    Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
+    // delay(2000);
+  }
+}
+
 void setup() {
-  delay(5000);
+  delay(2000);
   Serial.begin(115200);
 
   if (!bme1.begin()) {
@@ -57,56 +83,48 @@ void setup() {
   pinMode(LEDPin,   OUTPUT);
   digitalWrite(fanPower, HIGH);
   analogWrite(fanPin1, pwmValue);   // Initial speed
-
-  // Connect to WiFI
-  WiFi.begin(ssid, password);
-
-  Serial.println((String)"Connecting to SSID: " + ssid);
-
-  int i = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print((String)++i + "...");
-  }
-  Serial.println('\n');
-
-  Serial.println((String)"Connected to SSID: " + ssid);
-  Serial.print("IP Address: "); Serial.print(WiFi.localIP());
-  Serial.println('\n');
+  
+  connect_wifi();
   
   // Connect to MQTT
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback);       // Run callback function for when MQTT message received
 
-  // MODIFY to still control fans based on temperatures but attempt connection
-  while (!client.connected()) {
-    Serial.println((String)"Connecting to MQTT: " + mqttServer);
-    if (client.connect("ESP8266Client", mqttUser, mqttPassword)) {
-      Serial.println("Connected to MQTT");
-    } else {
-      Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
-      delay(2000);
-    }
-  }
+  connect_MQTT();
 
-  client.publish("esp/test", "Hello from ESP8266");
-  client.subscribe("esp/test");
+  // client.publish("esp/test", "Hello from ESP8266");
+  client.subscribe("rack/inlet/fan_speed");
+  client.subscribe("rack/outlet/fan_speed");
+  client.subscribe("rack/manual_fan");
 
   // Startup Routine
-  for (pwmValue = 1024; pwmValue >= 0; pwmValue -= 5) {
-    setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
-    setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
-    Serial.println(pwmValue);
-    delay(50);
-  }
+  // for (pwmValue = 1024; pwmValue >= 0; pwmValue -= 5) {
+  //   setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
+  //   setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
+  //   Serial.println(pwmValue);
+  //   delay(50);
+  // }
 }
 
 void loop() {
-  temp();
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
+    connect_wifi();
+    connect_MQTT();
+  }
+  else
+  {
+    // If MQTT not connected, reconnect
+    if(!client.connected()) {
+      connect_MQTT();
+    }
+  }
+  
+  // temp();
   handleSerial();
 
-  setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
-  setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
+  // setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
+  // setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
   delay(500);
 
   client.loop();
@@ -145,6 +163,7 @@ void setFanSpeed(int fanPin, int fanSpeed) {
 }
 
 void temp() {
+  // Only read sensor if it was initiated
   if (BME1 == 1) {
     bme1.readSensor();
     Serial.print("BME 1\t");
@@ -157,7 +176,7 @@ void temp() {
     Serial.println("Not Connected");
   }
 
-
+  // Only read sensor if it was initiated
   if (BME2 == 1) {
     bme2.readSensor();
     Serial.print("BME 2\t");
