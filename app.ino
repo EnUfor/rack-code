@@ -10,6 +10,8 @@
 BME280_I2C bme1(0x76); // I2C using address 0x76
 BME280_I2C bme2(0x77); // I2C using address 0x77
 
+String clientId;
+
 const double tempOffsetF = -1.8;
 const double tempOffsetC = -1.0;
 
@@ -27,9 +29,19 @@ int pwmValue = 1024;    // Initial pwm
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
+
+
 void setup() {
-  delay(2000);
+  // Initiate random seed without using analog input
+  randomSeed(micros());
+  // Create a random client ID
+  clientId = "ESP8266Client-";
+  clientId += String(random(0xffff), HEX);
+
+  delay(2000);    // delay to ensure serial monitor is connected
+
   Serial.begin(115200);
+  Serial.println((String)"clientId: " + clientId);
 
   if (!bme1.begin()) {
     Serial.println("Could not find a 1st (0x76) BME280 sensor, check wiring!");
@@ -52,7 +64,7 @@ void setup() {
   analogWrite(fanPin1, pwmValue);   // Initial speed
   
   connect_wifi();
-  
+
   // Initialize MQTT client
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);       // Run callback function for when MQTT message received
@@ -74,17 +86,16 @@ void setup() {
 }
 
 void loop() {
+  // If Wi-Fi disconnected, reconnect Wi-Fi and MQTT
+  // Else if MQTT disconnected, reconnect MQTT
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
     connect_wifi();
     connect_MQTT();
   }
-  else
+  else if (!client.connected())
   {
-    // If MQTT not connected, reconnect
-    if(!client.connected()) {
-      connect_MQTT();
-    }
+    connect_MQTT();
   }
   
   // temp();
@@ -192,7 +203,7 @@ void connect_wifi() {
 // Connects to MQTT broker
 void connect_MQTT() {
   Serial.println((String)"Connecting to MQTT: " + MQTT_SERVER);
-  if (client.connect("ESP8266Client", MQTT_USER, MQTT_PASSWORD)) {
+  if (client.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
     Serial.println("Connected to MQTT");
   } else {
     Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
