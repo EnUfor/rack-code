@@ -44,13 +44,13 @@ void setup() {
   Serial.println((String)"clientId: " + clientId);
 
   if (!bme1.begin()) {
-    Serial.println("Could not find a 1st (0x76) BME280 sensor, check wiring!");
+    Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
     BME1 = 0;
     // while (1);
   }
 
   if (!bme2.begin()) {
-    Serial.println("Could not find a 2nd (0x77) BME280 sensor, check wiring!");
+    Serial.println("Could not find 2nd (0x77) BME280 sensor, check wiring!");
     BME2 = 0;
     // while (1);
   }
@@ -86,15 +86,15 @@ void setup() {
 }
 
 void loop() {
+  /// Need to change this... Wifi will automatically reconnect if possible, no need to reconnect
+  /// MQTT, however, might need to reconnect if lost. More info needed tho
   // If Wi-Fi disconnected, reconnect Wi-Fi and MQTT
   // Else if MQTT disconnected, reconnect MQTT
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
     connect_wifi();
     connect_MQTT();
-  }
-  else if (!client.connected())
-  {
+  } else if (!client.connected()) {
     connect_MQTT();
   }
   
@@ -185,25 +185,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
 // Connects ESP8266 to Wi-Fi
 void connect_wifi() {
   WiFi.begin(SSID, WIFI_PASSWORD);
-
   Serial.println((String)"Connecting to SSID: " + SSID);
 
   int i = 0;
   double continueDelay = millis();
-  while (WiFi.status() != WL_CONNECTED && ((millis() - continueDelay) >= 8000)) {
+  while (WiFi.status() != WL_CONNECTED && ((millis() - continueDelay) < 8000)) {
     delay(1000);
     Serial.print((String)++i + "...");
   }
   Serial.println('\n');
 
-  if (WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED) {
     Serial.println((String)"Connected to SSID: " + SSID);
     Serial.print("IP Address: "); Serial.print(WiFi.localIP());
     Serial.println('\n');
-  }
-  else
-  {
-    Serial.println((String)"Failed to connect to SSID: " + SSID);
+  } else {
+    Serial.println((String)"Failed to connect to WiFi with state: " + WiFi.status());
     Serial.println('\n');;
   }
 }
