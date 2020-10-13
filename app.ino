@@ -189,15 +189,23 @@ void connect_wifi() {
   Serial.println((String)"Connecting to SSID: " + SSID);
 
   int i = 0;
-  while (WiFi.status() != WL_CONNECTED) {
+  double continueDelay = millis();
+  while (WiFi.status() != WL_CONNECTED && ((millis() - continueDelay) >= 8000)) {
     delay(1000);
     Serial.print((String)++i + "...");
   }
   Serial.println('\n');
 
-  Serial.println((String)"Connected to SSID: " + SSID);
-  Serial.print("IP Address: "); Serial.print(WiFi.localIP());
-  Serial.println('\n');
+  if (WL_CONNECTED) {
+    Serial.println((String)"Connected to SSID: " + SSID);
+    Serial.print("IP Address: "); Serial.print(WiFi.localIP());
+    Serial.println('\n');
+  }
+  else
+  {
+    Serial.println((String)"Failed to connect to SSID: " + SSID);
+    Serial.println('\n');;
+  }
 }
 
 // Connects to MQTT broker
