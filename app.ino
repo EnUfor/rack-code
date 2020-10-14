@@ -42,6 +42,7 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println((String)"clientId: " + clientId);
+  Serial.println((String)"system chip id" + system_get_chip_id());
 
   if (!bme1.begin()) {
     Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
@@ -86,20 +87,18 @@ void setup() {
 }
 
 void loop() {
-  /// Need to change this... Wifi will automatically reconnect if possible, no need to reconnect
-  /// MQTT, however, might need to reconnect if lost. More info needed tho
-  // If Wi-Fi disconnected, reconnect Wi-Fi and MQTT
-  // Else if MQTT disconnected, reconnect MQTT
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
-    connect_wifi();
-    connect_MQTT();
-  } else if (!client.connected()) {
-    connect_MQTT();
+  // If WiFi connected and MQTT not connected, connect MQTT (necessary)
+  if (WiFi.status() == WL_CONNECTED && !client.connected()) {
+    // Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
+    Serial.println("I would attempt to reconnect here");
+    // Run timer so reconnect only happens every x seconds
+    //connect_MQTT();
   }
   
   // temp();
   handleSerial();
+  String message = String(random(0xfdff), HEX);
+  client.publish("esp/test", message.c_str());
 
   // setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
   // setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
@@ -197,12 +196,12 @@ void connect_wifi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println((String)"Connected to SSID: " + SSID);
-    Serial.print("IP Address: "); Serial.print(WiFi.localIP());
-    Serial.println('\n');
+    Serial.println((String)"IP Address: " + WiFi.localIP());
+    // Serial.print("IP Address: "); Serial.print(WiFi.localIP());
   } else {
     Serial.println((String)"Failed to connect to WiFi with state: " + WiFi.status());
-    Serial.println('\n');;
   }
+  Serial.println('\n');
 }
 
 // Connects to MQTT broker
@@ -212,6 +211,6 @@ void connect_MQTT() {
     Serial.println("Connected to MQTT");
   } else {
     Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
-    // delay(2000);
   }
+  Serial.println('\n');
 }
