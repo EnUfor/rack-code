@@ -85,15 +85,15 @@ void setup() {
   //   delay(50);
   // }
 }
-
+int tracker = 10;
 void loop() {
-  // If WiFi connected and MQTT not connected, connect MQTT (necessary)
-  if (WiFi.status() == WL_CONNECTED && !client.connected()) {
-    // Serial.println((String)"Wifi had status: " + WiFi.status() + ". Reconnecting...");
-    Serial.println("I would attempt to reconnect here");
-    // Run timer so reconnect only happens every x seconds
-    //connect_MQTT();
+  // If WiFi connected and MQTT not connected, reconnect MQTT (necessary)
+  if (WiFi.status() == WL_CONNECTED && !client.connected() && tracker >= 10) {
+    connect_MQTT();
+    tracker = 0;
   }
+  Serial.println((String)"tracker: " + tracker);
+  tracker++;
   
   // temp();
   handleSerial();
@@ -196,8 +196,8 @@ void connect_wifi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println((String)"Connected to SSID: " + SSID);
-    Serial.println((String)"IP Address: " + WiFi.localIP());
-    // Serial.print("IP Address: "); Serial.print(WiFi.localIP());
+    // Serial.println((String)"IP Address: " + (String)WiFi.localIP());
+    Serial.print("IP Address: "); Serial.print(WiFi.localIP());
   } else {
     Serial.println((String)"Failed to connect to WiFi with state: " + WiFi.status());
   }
