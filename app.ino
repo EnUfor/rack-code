@@ -29,8 +29,6 @@ int pwmValue = 1024;    // Initial pwm
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
-
-
 void setup() {
   // Initiate random seed without using analog input
   randomSeed(micros());
@@ -85,15 +83,31 @@ void setup() {
   //   delay(50);
   // }
 }
-int tracker = 10;
+
+int initialDelay = 10;
+unsigned int cycleCount = initialDelay;   // Count of cycles completed in loop()
+int cycleDelay = initialDelay;            // Cycles to wait before trying to reconnect
+
 void loop() {
   // If WiFi connected and MQTT not connected, reconnect MQTT (necessary)
-  if (WiFi.status() == WL_CONNECTED && !client.connected() && tracker >= 10) {
+  // cycleCount is used to make sure on first disconnect, an immediate reconnect is attempted,
+  // but not every cycle is a reconnect attempt. cycleDelay increases after each failed
+  // connection attempt. This prevents uncessary reconnect attempts each loop
+  if (WiFi.status() == WL_CONNECTED && !client.connected() && cycleCount >= cycleDelay) {
     connect_MQTT();
-    tracker = 0;
+
+    cycleCount = 0;             // Reset counter
+    if (client.connected()) {   // If connected:
+      cycleDelay = initialDelay;// Reset delay
+      } else {
+      if (cycleDelay < 120) {   // If still not connected:
+        cycleDelay += 5;        // Increase delay
+        }
+      }
   }
-  Serial.println((String)"tracker: " + tracker);
-  tracker++;
+  Serial.println((String)"cycleCount: " + cycleCount);
+  Serial.println((String)"cycleDelay: " + cycleDelay);
+  cycleCount++;
   
   // temp();
   handleSerial();
