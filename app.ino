@@ -30,17 +30,18 @@ WiFiClient wificlient;
 PubSubClient client(wificlient);
 
 void setup() {
-  // Initiate random seed without using analog input
-  randomSeed(micros());
-  // Create a random client ID
-  clientId = "ESP8266Client-";
-  clientId += String(random(0xffff), HEX);
+  // // Initiate random seed without using analog input
+  // randomSeed(micros());
+  // // Create a random client ID
+  // clientId = "ESP8266Client-";
+  // clientId += String(random(0xffff), HEX);
 
   delay(2000);    // delay to ensure serial monitor is connected
 
   Serial.begin(115200);
+  clientId = "ESP-";
+  clientId += system_get_chip_id();
   Serial.println((String)"clientId: " + clientId);
-  Serial.println((String)"system chip id" + system_get_chip_id());
 
   if (!bme1.begin()) {
     Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
@@ -105,14 +106,14 @@ void loop() {
         }
       }
   }
-  Serial.println((String)"cycleCount: " + cycleCount);
-  Serial.println((String)"cycleDelay: " + cycleDelay);
+  // Serial.println((String)"cycleCount: " + cycleCount);
+  // Serial.println((String)"cycleDelay: " + cycleDelay);
   cycleCount++;
   
   // temp();
   handleSerial();
-  String message = String(random(0xfdff), HEX);
-  client.publish("esp/test", message.c_str());
+  // String message = String(random(0xfdff), HEX);
+  // client.publish("esp/test", message.c_str());
 
   // setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
   // setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
