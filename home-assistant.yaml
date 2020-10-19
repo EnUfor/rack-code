@@ -40,7 +40,7 @@ input_number:
     min: 0
     max: 100
     step: 1
-    icon: mdi:brightness-5
+    icon: mdi:fan
     unit_of_measurement: '%'
     
   outlet_fan_speed:    
@@ -48,7 +48,7 @@ input_number:
     min: 0
     max: 100
     step: 1
-    icon: mdi:brightness-5
+    icon: mdi:fan
     unit_of_measurement: '%'
 
 automation:
