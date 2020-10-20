@@ -3,6 +3,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include <cactus_io_BME280_I2C.h>
+#include <CircularBuffer.h>
 #include "config.h" // Turns out you need to use quotes for relative imports (2 hrs wasted)
 
 // Create two BME280 instances
@@ -11,9 +12,6 @@ BME280_I2C bme1(0x76); // I2C using address 0x76
 BME280_I2C bme2(0x77); // I2C using address 0x77
 
 String clientId;
-
-const double tempOffsetF = -1.8;
-const double tempOffsetC = -1.0;
 
 bool BME1 = 1;
 bool BME2 = 1;
@@ -29,13 +27,9 @@ int pwmValue = 1024;    // Initial pwm
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
-void setup() {
-  // // Initiate random seed without using analog input
-  // randomSeed(micros());
-  // // Create a random client ID
-  // clientId = "ESP8266Client-";
-  // clientId += String(random(0xffff), HEX);
+CircularBuffer<double, 20> temp1buff;
 
+void setup() {
   delay(2000);    // delay to ensure serial monitor is connected
 
   Serial.begin(115200);
@@ -54,6 +48,8 @@ void setup() {
     BME2 = 0;
     // while (1);
   }
+  bme1.setTempCal(-1);
+  bme2.setTempCal(-2);
   // Serial.println((String)"BME1 = " + BME1 + " BME2 = " + BME2);
 
   pinMode(fanPin1,  OUTPUT);
@@ -106,11 +102,23 @@ void loop() {
         }
       }
   }
+
+  for (int i = 0; i < 19; i++)
+  {
+    Serial.print(temp1buff[i]);
+    Serial.print(", ");
+  }
+  Serial.println("");
+
+  // if (cycleCount == 30) {
+  //   Serial.println("restarting");
+  //   while(1);
+  // }
   // Serial.println((String)"cycleCount: " + cycleCount);
-  // Serial.println((String)"cycleDelay: " + cycleDelay);
+  // Serial.pri1ntln((String)"cycleDelay: " + cycleDelay);
   cycleCount++;
   
-  // temp();
+  temp();
   handleSerial();
   // String message = String(random(0xfdff), HEX);
   // client.publish("esp/test", message.c_str());
@@ -161,7 +169,8 @@ void temp() {
     Serial.print("BME 1\t");
     Serial.print(bme1.getHumidity()); Serial.print(" %\t\t");
     // Serial.print(bme1.getTemperature_C() - tempOffsetC); Serial.print(" *C\t");
-    Serial.print(bme1.getTemperature_F() + tempOffsetF); Serial.print(" *F\t");
+    Serial.print(bme1.getTemperature_F()); Serial.print(" *F\t");
+    temp1buff.push(bme1.getTemperature_F());
     Serial.println();
   } else {
     Serial.print("BME 1\t");
@@ -174,7 +183,7 @@ void temp() {
     Serial.print("BME 2\t");
     Serial.print(bme2.getHumidity()); Serial.print(" %\t\t");
     // Serial.print(bme2.getTemperature_C() + tempOffsetC); Serial.print(" *C\t");
-    Serial.print(bme2.getTemperature_F() + tempOffsetF); Serial.print(" *F\t");
+    Serial.print(bme2.getTemperature_F()); Serial.print(" *F\t");
   } else {
     Serial.print("BME 2\t");
     Serial.println("Not Connected");
