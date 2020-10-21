@@ -44,6 +44,7 @@ public:
     ~Sensor();
     double temp;
     double humidity;
+    int fanSpeed;
     bool online = true;
 };
 
@@ -103,12 +104,14 @@ void setup() {
     if (!bme1.begin()) {
         Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
         BME1 = 0;
+        rack.inlet.online = false;
         // while (1);
     }
 
     if (!bme2.begin()) {
         Serial.println("Could not find 2nd (0x77) BME280 sensor, check wiring!");
         BME2 = 0;
+        rack.outlet.online = false;
         // while (1);
     }
     bme1.setTempCal(-1);
@@ -160,13 +163,19 @@ void loop() {
         }
     }
 
+    
+
     if (millis() - MQTT_sensor_timer >= 5000)
     {
         MQTT_sensor_timer = millis();
-        client.publish("rack/inlet/temp", "");
-        client.publish("rack/inlet/humidity", "");
-        client.publish("rack/outlet/temp", "");
-        client.publish("rack/outlet/humidity", "");
+
+        rack.readSensor(1);
+        rack.readSensor(2);
+
+        client.publish("rack/inlet/temp", String(rack.inlet.temp).c_str());
+        client.publish("rack/inlet/humidity", String(rack.inlet.humidity).c_str());
+        client.publish("rack/outlet/temp", String(rack.outlet.temp).c_str());
+        client.publish("rack/outlet/humidity", String(rack.outlet.humidity).c_str());
     }
     
 
