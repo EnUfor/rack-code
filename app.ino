@@ -13,19 +13,10 @@ unsigned int MQTT_delay = MQTT_initial_delay;
 
 // Create two BME280 instances
 // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
-BME280_I2C bme1(0x76); // I2C using address 0x76
-BME280_I2C bme2(0x77); // I2C using address 0x77
+// BME280_I2C bme1(0x76); // I2C using address 0x76
+// BME280_I2C bme2(0x77); // I2C using address 0x77
 
 String clientId;
-
-BME280_I2C test = bme1;
-// String stringly = "0x77";
-uint8_t stringly = 0x77;
-BME280_I2C test2(0x76);
-BME280_I2C test3(stringly);
-
-bool BME1 = 1;
-bool BME2 = 1;
 
 const int fanPin1   = 13; // D7
 const int fanPin2   = 15; // D8
@@ -47,15 +38,22 @@ private:
     /* data */
 public:
     Sensor();
-    Sensor(uint8_t address) {
-        BME280_I2C sensor(address);
-    }
+
     ~Sensor();
     BME280_I2C sensor;
     double temp;
     double humidity;
     int fanSpeed;
     bool online = true;
+    Sensor(uint8_t address) {
+        sensor = BME280_I2C(address);
+        sensor.setTempCal(-1);
+
+        if (!sensor.begin())
+        {
+            online = false;
+        }
+    }
 };
 
 Sensor::Sensor(/* args */)
@@ -70,27 +68,27 @@ class Rack
 {
 private:
     /* data */
+    // Sensor tipy = 0x77;
 public:
     Rack(/* args */);
     ~Rack();
-    // double outlet;
-    // double inlet;
-    Sensor inlet();
-    Sensor outlet;
+    // Sensor inlet = 0x76;
+    // Sensor outlet = 0x77;
+    Sensor inlet = Sensor(0x76);
+    Sensor outlet = Sensor(0x77);
 
-    // void readSensor(int sensorNumber) {
-    //     if (sensorNumber == 1)
-    //     {
-    //         bme1.readSensor();
-    //         inlet.temp = bme1.getTemperature_F();
-    //         inlet.humidity = bme1.getTemperature_C();
-    //     } else if (sensorNumber == 2)
-    //     {
-    //         bme2.readSensor();
-    //         outlet.temp = bme2.getTemperature_F();
-    //         outlet.humidity = bme2.getTemperature_C();
-    //     }
-    // }
+    /**
+     * Read sensors for rack
+     * Need to implement check to not read the sensor if it's not available (aka sensor.online = false)
+    **/
+    void readSensors() {
+        inlet.sensor.readSensor();
+        outlet.sensor.readSensor();
+        inlet.temp = inlet.sensor.getTemperature_F();
+        outlet.temp = outlet.sensor.getTemperature_F();
+        inlet.humidity = inlet.sensor.getHumidity();
+        outlet.humidity = outlet.sensor.getHumidity();
+    }
 };
 
 Rack::Rack(/* args */)
@@ -104,12 +102,16 @@ Rack::~Rack()
 Rack rack;
 
 void setup() {
-    delay(2000);    // delay to ensure serial monitor is connected
-
+    delay(3000);    // delay to ensure serial monitor is connected
     Serial.begin(115200);
     clientId = "ESP-";
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
+    rack.inlet.sensor.begin();
+    rack.outlet.sensor.begin();
+
+    Serial.println((String)"inlet sensor - " + rack.inlet.online);
+    Serial.println((String)"outlet sensor - " + rack.outlet.online);
 
     // if (!bme1.begin()) {
     //     Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
@@ -118,15 +120,12 @@ void setup() {
     //     // while (1);
     // }
 
-    if (!bme2.begin()) {
-        Serial.println("Could not find 2nd (0x77) BME280 sensor, check wiring!");
-        BME2 = 0;
-        rack.outlet.online = false;
-        // while (1);
-    }
-    bme1.setTempCal(-1);
-    bme2.setTempCal(-1);
-    // Serial.println((String)"BME1 = " + BME1 + " BME2 = " + BME2);
+    // if (!bme2.begin()) {
+    //     Serial.println("Could not find 2nd (0x77) BME280 sensor, check wiring!");
+    //     BME2 = 0;
+    //     rack.outlet.online = false;
+    //     // while (1);
+    // }
 
     pinMode(fanPin1,  OUTPUT);
     pinMode(fanPin2,  OUTPUT);
@@ -143,7 +142,6 @@ void setup() {
 
     connect_MQTT();
 
-    // client.publish("esp/test", "Hello from ESP8266");
     client.subscribe("rack/inlet/fan_speed");
     client.subscribe("rack/outlet/fan_speed");
     client.subscribe("rack/manual_fan");
@@ -173,20 +171,23 @@ void loop() {
         }
     }
 
+    rack.readSensors();
+
+    Serial.print(rack.inlet.temp);
+    Serial.print("   ");
+    Serial.print(rack.outlet.temp);
+    Serial.println();
     
 
-    // if (millis() - MQTT_sensor_timer >= 5000)
-    // {
-    //     MQTT_sensor_timer = millis();
+    if (millis() - MQTT_sensor_timer >= 5000)
+    {
+        MQTT_sensor_timer = millis();
 
-    //     rack.readSensor(1);
-    //     rack.readSensor(2);
-
-    //     client.publish("rack/inlet/temp", String(rack.inlet.temp).c_str());
-    //     client.publish("rack/inlet/humidity", String(rack.inlet.humidity).c_str());
-    //     client.publish("rack/outlet/temp", String(rack.outlet.temp).c_str());
-    //     client.publish("rack/outlet/humidity", String(rack.outlet.humidity).c_str());
-    // }
+        client.publish("rack/inlet/temp", String(rack.inlet.temp).c_str());
+        client.publish("rack/inlet/humidity", String(rack.inlet.humidity).c_str());
+        client.publish("rack/outlet/temp", String(rack.outlet.temp).c_str());
+        client.publish("rack/outlet/humidity", String(rack.outlet.humidity).c_str());
+    }
     
 
     // Print buff_inletTemp
@@ -197,12 +198,6 @@ void loop() {
     // }
     // Serial.println("");
 
-    //Restart every few cycles
-    // if (cycleCount == 30) {
-    //   Serial.println("restarting");
-    //   while(1);
-    // }
-    
     // temp();
     handleSerial();
     // String message = String(random(0xfdff), HEX);
@@ -247,36 +242,36 @@ void setFanSpeed(int fanPin, int fanSpeed) {
     }
 }
 
-void temp() {
-    // Only read sensor if it was initiated
-    if (BME1 == 1) {
-        bme1.readSensor();
-        Serial.print("BME 1\t");
-        Serial.print(bme1.getHumidity()); Serial.print(" %\t\t");
-        // Serial.print(bme1.getTemperature_C() - tempOffsetC); Serial.print(" *C\t");
-        Serial.print(bme1.getTemperature_F()); Serial.print(" *F\t");
-        buff_inletTemp.push(bme1.getTemperature_F());
-        Serial.println();
-    } else {
-        Serial.print("BME 1\t");
-        Serial.println("Not Connected");
-    }
+// void temp() {
+//     // Only read sensor if it was initiated
+//     if (BME1 == 1) {
+//         bme1.readSensor();
+//         Serial.print("BME 1\t");
+//         Serial.print(bme1.getHumidity()); Serial.print(" %\t\t");
+//         // Serial.print(bme1.getTemperature_C() - tempOffsetC); Serial.print(" *C\t");
+//         Serial.print(bme1.getTemperature_F()); Serial.print(" *F\t");
+//         buff_inletTemp.push(bme1.getTemperature_F());
+//         Serial.println();
+//     } else {
+//         Serial.print("BME 1\t");
+//         Serial.println("Not Connected");
+//     }
 
-    // Only read sensor if it was initiated
-    if (BME2 == 1) {
-        bme2.readSensor();
-        Serial.print("BME 2\t");
-        Serial.print(bme2.getHumidity()); Serial.print(" %\t\t");
-        // Serial.print(bme2.getTemperature_C() + tempOffsetC); Serial.print(" *C\t");
-        Serial.print(bme2.getTemperature_F()); Serial.print(" *F\t");
-        buff_outletTemp.push(bme2.getTemperature_F());
-    } else {
-        Serial.print("BME 2\t");
-        Serial.println("Not Connected");
-    }
+//     // Only read sensor if it was initiated
+//     if (BME2 == 1) {
+//         bme2.readSensor();
+//         Serial.print("BME 2\t");
+//         Serial.print(bme2.getHumidity()); Serial.print(" %\t\t");
+//         // Serial.print(bme2.getTemperature_C() + tempOffsetC); Serial.print(" *C\t");
+//         Serial.print(bme2.getTemperature_F()); Serial.print(" *F\t");
+//         buff_outletTemp.push(bme2.getTemperature_F());
+//     } else {
+//         Serial.print("BME 2\t");
+//         Serial.println("Not Connected");
+//     }
 
-    Serial.println(); Serial.println();
-}
+//     Serial.println(); Serial.println();
+// }
 
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived in topic: ");
