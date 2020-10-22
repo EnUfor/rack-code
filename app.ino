@@ -18,6 +18,12 @@ BME280_I2C bme2(0x77); // I2C using address 0x77
 
 String clientId;
 
+BME280_I2C test = bme1;
+// String stringly = "0x77";
+uint8_t stringly = 0x77;
+BME280_I2C test2(0x76);
+BME280_I2C test3(stringly);
+
 bool BME1 = 1;
 bool BME2 = 1;
 
@@ -40,8 +46,12 @@ class Sensor
 private:
     /* data */
 public:
-    Sensor(/* args */);
+    Sensor();
+    Sensor(uint8_t address) {
+        BME280_I2C sensor(address);
+    }
     ~Sensor();
+    BME280_I2C sensor;
     double temp;
     double humidity;
     int fanSpeed;
@@ -65,22 +75,22 @@ public:
     ~Rack();
     // double outlet;
     // double inlet;
-    Sensor inlet;
+    Sensor inlet();
     Sensor outlet;
 
-    void readSensor(int sensorNumber) {
-        if (sensorNumber == 1)
-        {
-            bme1.readSensor();
-            inlet.temp = bme1.getTemperature_F();
-            inlet.humidity = bme1.getTemperature_C();
-        } else if (sensorNumber == 2)
-        {
-            bme2.readSensor();
-            outlet.temp = bme2.getTemperature_F();
-            outlet.humidity = bme2.getTemperature_C();
-        }
-    }
+    // void readSensor(int sensorNumber) {
+    //     if (sensorNumber == 1)
+    //     {
+    //         bme1.readSensor();
+    //         inlet.temp = bme1.getTemperature_F();
+    //         inlet.humidity = bme1.getTemperature_C();
+    //     } else if (sensorNumber == 2)
+    //     {
+    //         bme2.readSensor();
+    //         outlet.temp = bme2.getTemperature_F();
+    //         outlet.humidity = bme2.getTemperature_C();
+    //     }
+    // }
 };
 
 Rack::Rack(/* args */)
@@ -101,12 +111,12 @@ void setup() {
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
 
-    if (!bme1.begin()) {
-        Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
-        BME1 = 0;
-        rack.inlet.online = false;
-        // while (1);
-    }
+    // if (!bme1.begin()) {
+    //     Serial.println("Could not find 1st (0x76) BME280 sensor, check wiring!");
+    //     BME1 = 0;
+    //     rack.inlet.online = false;
+    //     // while (1);
+    // }
 
     if (!bme2.begin()) {
         Serial.println("Could not find 2nd (0x77) BME280 sensor, check wiring!");
@@ -165,18 +175,18 @@ void loop() {
 
     
 
-    if (millis() - MQTT_sensor_timer >= 5000)
-    {
-        MQTT_sensor_timer = millis();
+    // if (millis() - MQTT_sensor_timer >= 5000)
+    // {
+    //     MQTT_sensor_timer = millis();
 
-        rack.readSensor(1);
-        rack.readSensor(2);
+    //     rack.readSensor(1);
+    //     rack.readSensor(2);
 
-        client.publish("rack/inlet/temp", String(rack.inlet.temp).c_str());
-        client.publish("rack/inlet/humidity", String(rack.inlet.humidity).c_str());
-        client.publish("rack/outlet/temp", String(rack.outlet.temp).c_str());
-        client.publish("rack/outlet/humidity", String(rack.outlet.humidity).c_str());
-    }
+    //     client.publish("rack/inlet/temp", String(rack.inlet.temp).c_str());
+    //     client.publish("rack/inlet/humidity", String(rack.inlet.humidity).c_str());
+    //     client.publish("rack/outlet/temp", String(rack.outlet.temp).c_str());
+    //     client.publish("rack/outlet/humidity", String(rack.outlet.humidity).c_str());
+    // }
     
 
     // Print buff_inletTemp
