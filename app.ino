@@ -31,10 +31,10 @@ class Sensor
 {
 private:
     
-    // void setup() {
-    //     sensor.setTempCal(-1);
-    //     if (sensor.begin()) {online = true;}
-    // }
+    void setup() {
+        sensor.setTempCal(-1);
+        if (sensor.begin()) {online = true;}
+    }
     
 public:
     Sensor();
@@ -48,10 +48,7 @@ public:
 
     Sensor(uint8_t address) {
         sensor = BME280_I2C(address);
-        // setup();
-        sensor.setTempCal(-1);
-
-        if (sensor.begin()) {online = true;}
+        setup();
     }
 
     // void setFanSpeed() {
@@ -70,7 +67,6 @@ Sensor::~Sensor()
 class Rack
 {
 private:
-
     void printer(String name, Sensor sensor) {
         Serial.print(name); Serial.print(":\t");
         if (sensor.online) {
@@ -81,31 +77,59 @@ private:
             Serial.println("Not Connected");
         }
     }
-
-    void reader(Sensor sensor) {
-        if (sensor.online) {
-            sensor.sensor.readSensor();
-            sensor.temp = sensor.sensor.getTemperature_F();
-            sensor.humidity = sensor.sensor.getHumidity();
-        }
-    }
-
 public:
     Rack(/* args */);
     ~Rack();
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Sensor inlet = Sensor(0x76);
     Sensor outlet = Sensor(0x77);
-    
 
     /**
-     * Read sensors for rack
-     * Need to implement check to not read the sensor if it's not available (aka sensor.online = false)
+     * Read sensors of rack
     **/
-    void readSensors() {
-        reader(inlet);
-        reader(outlet);
+    // void readSensors() {
+    //     reader(inlet);
+    //     reader(outlet);
+    // }
+
+    void actuallyReadSensors() {
+        inlet.sensor.readSensor();
+        outlet.sensor.readSensor();
+        inlet.temp = inlet.sensor.getTemperature_F();
+        inlet.humidity = inlet.sensor.getHumidity();
+        outlet.temp = outlet.sensor.getTemperature_F();
+        outlet.humidity = outlet.sensor.getHumidity();
     }
+
+    // void actuallyPrintSensors() {
+    //     Serial.print("Inlet"); Serial.print(":\t");
+    //     if (inlet.online) {
+    //         Serial.print(inlet.temp); Serial.print(" *F\t\t");
+    //         Serial.print(inlet.humidity); Serial.println(" %");
+    //     } else
+    //     {
+    //         Serial.println("Not Connected");
+    //     }
+
+    //     Serial.print("Outlet"); Serial.print(":\t");
+    //     if (outlet.online) {
+    //         Serial.print(outlet.temp); Serial.print(" *F\t\t");
+    //         Serial.print(outlet.humidity); Serial.println(" %");
+    //     } else
+    //     {
+    //         Serial.println("Not Connected");
+    //     }
+    //     Serial.println("\n");
+    // }
+    
+
+    // void reader(Sensor sensor) {
+    //     if (sensor.online) {
+    //         sensor.sensor.readSensor();
+    //         sensor.temp = sensor.sensor.getTemperature_F();
+    //         sensor.humidity = sensor.sensor.getHumidity();
+    //     }
+    // }
 
     /**
      * Print sensor values to serial
@@ -164,6 +188,15 @@ void setup() {
     // }
     MQTT_sensor_timer = millis();
     MQTT_reconnect_timer = millis();
+
+    // Serial.println((String)"inlet online?: " + rack.inlet.online);
+    // Serial.println((String)"outlet online?: " + rack.outlet.online);
+    // rack.inlet.sensor.readSensor();
+    // rack.outlet.sensor.readSensor();
+    // Serial.print("inlet temp: ");
+    // Serial.println(rack.inlet.sensor.getTemperature_F());
+    // Serial.print("outlet temp: ");
+    // Serial.println(rack.outlet.sensor.getTemperature_F());
 }
 
 void loop() {
@@ -180,8 +213,16 @@ void loop() {
         }
     }
 
-    rack.readSensors();
+    rack.actuallyReadSensors();
+    // rack.actuallyPrintSensors();
     rack.printSensors();
+
+    // rack.readSensors();
+    // Serial.print("inlet temp: ");
+    // Serial.println(rack.inlet.sensor.getTemperature_F());
+    // Serial.print("outlet temp: ");
+    // Serial.println(rack.outlet.sensor.getTemperature_F());
+    // rack.printSensors();
     
 
     if (millis() - MQTT_sensor_timer >= 5000)
@@ -205,13 +246,7 @@ void loop() {
 
     // temp();
     handleSerial();
-    // String message = String(random(0xfdff), HEX);
-    // client.publish("esp/test", message.c_str());
-
-    // setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
-    // setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
     delay(500);
-
     client.loop();
 }
 
