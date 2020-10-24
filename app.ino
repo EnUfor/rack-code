@@ -38,7 +38,7 @@ private:
     
 public:
     Sensor();
-    ~Sensor();
+    // ~Sensor();
     BME280_I2C sensor;
     // CircularBuffer<double, 20> history;
     double temp;
@@ -60,9 +60,9 @@ Sensor::Sensor()
 {
 }
 
-Sensor::~Sensor()
-{
-}
+// Sensor::~Sensor()
+// {
+// }
 
 class Rack
 {
@@ -79,6 +79,7 @@ private:
             zone.humidity = zone.sensor.getHumidity();
         }
     }
+
     /**
      * Print sensor values to serial
     **/ 
@@ -94,10 +95,11 @@ private:
     }
 public:
     Rack();
-    ~Rack();
+    // ~Rack();
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Sensor inlet = Sensor(0x76);
     Sensor outlet = Sensor(0x77);
+    CircularBuffer<double, 20> YUWORKHERE;
 
     /**
      * Read sensor values
@@ -117,13 +119,13 @@ public:
     }
 };
 
-Rack::Rack(/* args */)
+Rack::Rack()
 {
 }
 
-Rack::~Rack()
-{
-}
+// Rack::~Rack()
+// {
+// }
 
 Rack rack;
 
