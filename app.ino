@@ -28,6 +28,17 @@ PubSubClient client(wificlient);
 // CircularBuffer<double, 20> buff_inletTemp;
 // CircularBuffer<double, 20> buff_outletTemp;
 
+
+// https://www.megunolink.com/documentation/arduino-libraries/circular-buffer/
+typedef CircularBuffer<double, 20> TempBuffer;
+
+TempBuffer testingthings;
+
+// app:111:31: error: use of deleted function 'Sensor::Sensor(Sensor&&)'
+// since multiple instances of the sensor are being made, the copy operator fails
+// we can try to move? the reference??
+
+
 class Sensor
 {
 private:
