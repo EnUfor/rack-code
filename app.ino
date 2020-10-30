@@ -28,17 +28,6 @@ PubSubClient client(wificlient);
 // CircularBuffer<double, 20> buff_inletTemp;
 // CircularBuffer<double, 20> buff_outletTemp;
 
-
-// https://www.megunolink.com/documentation/arduino-libraries/circular-buffer/
-typedef CircularBuffer<double, 20> TempBuffer;
-
-TempBuffer testingthings;
-
-// app:111:31: error: use of deleted function 'Sensor::Sensor(Sensor&&)'
-// since multiple instances of the sensor are being made, the copy operator fails
-// we can try to move? the reference??
-
-
 class Sensor
 {
 private:
@@ -50,10 +39,8 @@ private:
     
 public:
     Sensor();
-    // ~Sensor();
     BME280_I2C sensor;
-    // CircularBuffer<double, 20> history;
-    // CircularBuffer<double, 20> hi;
+    CircularBuffer<double, 20>* history;    // 3? hours wasted for a single *
     double temp;
     double humidity;
     int fanSpeed = 1024;
@@ -72,10 +59,6 @@ public:
 Sensor::Sensor()
 {
 }
-
-// Sensor::~Sensor()
-// {
-// }
 
 class Rack
 {
@@ -108,11 +91,9 @@ private:
     }
 public:
     Rack();
-    // ~Rack();
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Sensor inlet = Sensor(0x76);
     Sensor outlet = Sensor(0x77);
-    // CircularBuffer<double, 20> YUWORKHERE;
 
     /**
      * Read sensor values
@@ -135,10 +116,6 @@ public:
 Rack::Rack()
 {
 }
-
-// Rack::~Rack()
-// {
-// }
 
 Rack rack;
 
