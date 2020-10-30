@@ -2,10 +2,10 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
-#include <cactus_io_BME280_I2C.h>
-#include <CircularBuffer.h>
+
 #include "config.h"     // Turns out you need to use quotes for relative imports (2 hrs wasted)
 #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
+#include "Classes/rack.h"
 
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
@@ -25,98 +25,6 @@ int pwmValue = 1024;    // Initial pwm
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
-// CircularBuffer<double, 20> buff_inletTemp;
-// CircularBuffer<double, 20> buff_outletTemp;
-
-class Sensor
-{
-private:
-    
-    void setup() {
-        sensor.setTempCal(-1);
-        if (sensor.begin()) {online = true;}
-    }
-    
-public:
-    Sensor();
-    BME280_I2C sensor;
-    CircularBuffer<double, 20>* history;    // 3? hours wasted for a single *
-    double temp;
-    double humidity;
-    int fanSpeed = 1024;
-    bool online = false;
-
-    Sensor(uint8_t address) {
-        sensor = BME280_I2C(address);
-        setup();
-    }
-
-    // void setFanSpeed() {
-
-    // }
-};
-
-Sensor::Sensor()
-{
-}
-
-class Rack
-{
-private:
-
-    /**
-     * Read sensor and set respective values
-     * Must be passed by reference (3 hrs wasted)
-    **/    
-    void reader(Sensor& zone) {
-        if (zone.online) {
-            zone.sensor.readSensor();
-            zone.temp = zone.sensor.getTemperature_F();
-            zone.humidity = zone.sensor.getHumidity();
-        }
-    }
-
-    /**
-     * Print sensor values to serial
-    **/ 
-    void printer(String name, Sensor sensor) {
-        Serial.print(name); Serial.print(":\t");
-        if (sensor.online) {
-            Serial.print(sensor.temp); Serial.print(" *F\t\t");
-            Serial.print(sensor.humidity); Serial.println(" %");
-        } else
-        {
-            Serial.println("Not Connected");
-        }
-    }
-public:
-    Rack();
-    // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
-    Sensor inlet = Sensor(0x76);
-    Sensor outlet = Sensor(0x77);
-
-    /**
-     * Read sensor values
-    **/
-    void readSensors() {
-        reader(inlet);
-        reader(outlet);
-    }
-
-    /**
-     * Print sensor values
-    **/
-    void printSensors() {
-        // printer("Inlet", inlet);
-        // printer("Outlet", outlet);
-        Serial.println("\n");
-    }
-};
-
-Rack::Rack()
-{
-}
-
 Rack rack;
 
 void setup() {
@@ -125,8 +33,6 @@ void setup() {
     clientId = "ESP-";
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
-    rack.inlet.sensor.begin();
-    rack.outlet.sensor.begin();
 
     pinMode(fanPin1,  OUTPUT);
     pinMode(fanPin2,  OUTPUT);
@@ -148,12 +54,12 @@ void setup() {
     client.subscribe(SUB_MAN_FAN);
 
     // Startup Routine
-    // for (pwmValue = 1024; pwmValue >= 0; pwmValue -= 5) {
-    //   setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
-    //   setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
+    for (pwmValue = 1024; pwmValue >= 0; pwmValue -= 5) {
+      setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
+      setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
     //   Serial.println(pwmValue);
-    //   delay(50);
-    // }
+      delay(50);
+    }
     MQTT_sensor_timer = millis();
     MQTT_reconnect_timer = millis();
 }
@@ -193,6 +99,9 @@ void loop() {
     //     Serial.print(", ");
     // }
     // Serial.println("");
+
+    setFanSpeed(fanPin1, pwmValue);
+    setFanSpeed(fanPin2, pwmValue);
 
     // temp();
     handleSerial();
