@@ -4,7 +4,7 @@
 #include <Wire.h>
 
 #include "config.h"     // Turns out you need to use quotes for relative imports (2 hrs wasted)
-#include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
+// #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
 #include "Classes/rack.h"
 
 unsigned long MQTT_sensor_timer;

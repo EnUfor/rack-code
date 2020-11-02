@@ -1,13 +1,20 @@
 #include <cactus_io_BME280_I2C.h>
 #include <CircularBuffer.h>
+#include "../pins.h"
 
 class Zone
 {
 private:
     
-    void setup() {
+    void setupSensor(uint8_t address) {
+        sensor = BME280_I2C(address);
         sensor.setTempCal(-1);
         if (sensor.begin()) {online = true;}
+    }
+    
+    void setupPin(int pin) {
+        pwmPin = pin;
+        pinMode(pin, OUTPUT);
     }
     
 public:
@@ -19,14 +26,29 @@ public:
     double humidity;
     int fanSpeed = 1024;
     bool online = false;
+    int pwmPin;
 
-    Zone(uint8_t address) {
-        sensor = BME280_I2C(address);
-        setup();
+    // Zone(uint8_t address) {
+    //     setupSensor(address);
+    // }
+
+    Zone(uint8_t address, int pin) {
+        setupSensor(address);
+        setupPin(pin);
     }
 
-    // void setFanSpeed() {
-    // }
+    void setFanSpeed(int speed) {
+        speed = map(speed, 0, 100, 0, 1024);
+        analogWrite(pwmPin, speed);
+
+        if (speed <= 0) {            // Turn off fans if either speed 0
+            digitalWrite(FANPOWER, LOW);
+            digitalWrite(LEDPIN, LOW);   // Turn on LED
+        } else {                        // Turns fans on elsewise
+            digitalWrite(FANPOWER, HIGH);
+            digitalWrite(LEDPIN, HIGH);    // Turn off LED
+        }
+    }
 };
 
 Zone::Zone()
@@ -65,8 +87,8 @@ private:
 public:
     Rack();
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
-    Zone inlet = Zone(0x76);
-    Zone outlet = Zone(0x77);
+    Zone inlet = Zone(0x76, INLETFANPIN);
+    Zone outlet = Zone(0x77, OUTLETFANPIN);
     CircularBuffer<double, 20> inletHistory;
     CircularBuffer<double, 20> outletHistory;
 
@@ -117,5 +139,7 @@ void thingy() {
 
     // CircularBuffer<double, 20> hellos;
     // hellos.operator[](2);
+
+    
 
 }
