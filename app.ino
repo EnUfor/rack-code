@@ -81,7 +81,9 @@ void loop() {
     rack.readSensors();
     rack.printSensors();
     // rack.inlet.history->push(rack.inlet.temp);   // writing to something that's not memory?
-    rack.printBuff();
+    rack.printBuff(rack.inletHistory);
+    rack.printBuff(rack.outletHistory);
+    Serial.print("\n");
 
     if (millis() - MQTT_sensor_timer >= 10000)
     {

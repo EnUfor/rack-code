@@ -89,13 +89,19 @@ public:
         Serial.println("\n");
     }
 
-    void printBuff() {
-        for (int i = inletHistory.size() - 1; i >= 0; i--)
+    /**
+     * Print Buffer Values
+    **/
+    void printBuff(CircularBuffer<double, 20> & buff) {
+        for (int i = buff.size() - 1; i >= 0; i--)
         {
-            Serial.print(inletHistory.operator[](i));
-            Serial.print(", ");
+            Serial.print(buff.operator[](i));
+            if (i > 0)
+            {
+                Serial.print(", ");
+            }    
         }
-        Serial.println("\n");
+        Serial.print("\n");
     }
 };
 
@@ -104,12 +110,12 @@ Rack::Rack()
 }
 
 void thingy() {
-    Rack testing;
-    Zone zont;
+    // Rack testing;
+    // Zone zont;
 
     // zont.history[1];
 
-    // CircularBuffer<double, 20> *distory;
+    // CircularBuffer<double, 20> hellos;
+    // hellos.operator[](2);
 
-    // distory->size()
 }
