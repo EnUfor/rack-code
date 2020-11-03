@@ -24,7 +24,7 @@ public:
     // I hate CircularBuffer(s) now
     double temp;
     double humidity;
-    int fanSpeed = 1024;
+    int fanSpeed;
     bool online = false;
     int pwmPin;
 
@@ -40,6 +40,7 @@ public:
     void setFanSpeed(int speed) {
         speed = map(speed, 0, 100, 0, 1024);
         analogWrite(pwmPin, speed);
+        fanSpeed = speed;
 
         if (speed <= 0) {            // Turn off fans if either speed 0
             digitalWrite(FANPOWER, LOW);
@@ -124,6 +125,11 @@ public:
             }    
         }
         Serial.print("\n");
+    }
+
+    void setFans(int speed) {
+        inlet.setFanSpeed(speed);
+        outlet.setFanSpeed(speed);
     }
 };
 

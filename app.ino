@@ -112,8 +112,9 @@ void handleSerial() {         // Must imput single digit numbers with leading 0
         pwmValue = atoi(inputBuffer);
         printValue = true;
     }
-
+    
     if (printValue) {
+        rack.setFans(pwmValue);
         Serial.print("Current PWM = ");
         Serial.println(pwmValue);
         Serial.flush();
