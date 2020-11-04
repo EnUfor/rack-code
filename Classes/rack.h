@@ -85,6 +85,12 @@ private:
             Serial.println("Not Connected");
         }
     }
+
+    void setup() {
+        pinMode(FANPOWER, OUTPUT);
+        pinMode(LEDPIN, OUTPUT);
+        setFans(100);
+    }
 public:
     Rack();
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
@@ -135,6 +141,7 @@ public:
 
 Rack::Rack()
 {
+    setup();
 }
 
 void thingy() {

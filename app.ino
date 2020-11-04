@@ -34,12 +34,12 @@ void setup() {
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
 
-    pinMode(fanPin1,  OUTPUT);
-    pinMode(fanPin2,  OUTPUT);
-    pinMode(fanPower, OUTPUT);
-    pinMode(LEDPin,   OUTPUT);
-    digitalWrite(fanPower, HIGH);
-    analogWrite(fanPin1, pwmValue);   // Initial speed
+    // pinMode(fanPin1,  OUTPUT);
+    // pinMode(fanPin2,  OUTPUT);
+    // pinMode(fanPower, OUTPUT);
+    // pinMode(LEDPin,   OUTPUT);
+    // digitalWrite(fanPower, HIGH);
+    // analogWrite(fanPin1, pwmValue);   // Initial speed
     
     connect_wifi();
 
@@ -95,8 +95,8 @@ void loop() {
         client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
     }
 
-    setFanSpeed(fanPin1, pwmValue);
-    setFanSpeed(fanPin2, pwmValue);
+    // setFanSpeed(fanPin1, pwmValue);
+    // setFanSpeed(fanPin2, pwmValue);
 
     handleSerial();
     delay(500);
@@ -118,21 +118,6 @@ void handleSerial() {         // Must imput single digit numbers with leading 0
         Serial.print("Current PWM = ");
         Serial.println(pwmValue);
         Serial.flush();
-    }
-}
-
-void setFanSpeed(int fanPin, int fanSpeed) {
-    analogWrite(fanPin, fanSpeed);
-
-    //Serial.print("PWM Value Set: ");
-    //Serial.println(fanSpeed);
-
-    if (fanSpeed <= 0) {            // Turn off fans if either speed 0 (or less than)
-        digitalWrite(fanPower, LOW);
-        digitalWrite(LEDPin, LOW);   // Turn on LED
-    } else {                        // Turns fans on elsewise
-        digitalWrite(fanPower, HIGH);
-        digitalWrite(LEDPin, HIGH);    // Turn off LED
     }
 }
 
