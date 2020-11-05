@@ -134,6 +134,7 @@ public:
     }
 
     void setFans(int speed) {
+        Serial.println((String)"setFans Ran: " + speed);
         inlet.setFanSpeed(speed);
         outlet.setFanSpeed(speed);
     }

@@ -2,26 +2,22 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
-
 #include "config.h"     // Turns out you need to use quotes for relative imports (2 hrs wasted)
 // #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
 #include "Classes/rack.h"
 
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
+unsigned long printDelay;
+
 int MQTT_initial_delay = 10000;
 unsigned int MQTT_delay = MQTT_initial_delay;
 
 String clientId;
 
-const int fanPin1   = 13; // D7
-const int fanPin2   = 15; // D8
-const int fanPower  = 12; // D6
-const int LEDPin    = 16; // D0 (also pin for 2nd onboard LED). GPIO2 (D4) is other LED
-
 int pwmValue = 1024;    // Initial pwm
 
-// Initiate WiFi & MQTT. Change the client name if you have multiple ESPs
+// Initiate WiFi & MQTT
 WiFiClient wificlient;
 PubSubClient client(wificlient);
 
@@ -34,13 +30,6 @@ void setup() {
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
 
-    // pinMode(fanPin1,  OUTPUT);
-    // pinMode(fanPin2,  OUTPUT);
-    // pinMode(fanPower, OUTPUT);
-    // pinMode(LEDPin,   OUTPUT);
-    // digitalWrite(fanPower, HIGH);
-    // analogWrite(fanPin1, pwmValue);   // Initial speed
-    
     connect_wifi();
 
     // Initialize MQTT client
@@ -53,16 +42,9 @@ void setup() {
     client.subscribe(SUB_OUTLET_FAN);
     client.subscribe(SUB_MAN_FAN);
 
-    // Startup Routine (remember that enabling this causes a huge delay)
-    // For some reason it also causes things to freeze (exception 28?)
-    // for (pwmValue = 1024; pwmValue >= 0; pwmValue -= 5) {
-    //     setFanSpeed(fanPin1, pwmValue);       // Set fan speed1
-    //     setFanSpeed(fanPin2, pwmValue);       // Set fan speed2
-    //     // Serial.println(pwmValue);
-    //     delay(50);
-    // }
     MQTT_sensor_timer = millis();
     MQTT_reconnect_timer = millis();
+    printDelay = millis();
 }
 
 void loop() {
@@ -78,12 +60,19 @@ void loop() {
             MQTT_delay = MQTT_initial_delay;     // Reset delay
         }
     }
-    rack.readSensors();
-    rack.printSensors();
-    // rack.inlet.history->push(rack.inlet.temp);   // writing to something that's not memory?
-    rack.printBuff(rack.inletHistory);
-    rack.printBuff(rack.outletHistory);
-    Serial.print("\n");
+
+    if (millis() - printDelay >= 500) {
+        printDelay = millis();
+
+        rack.readSensors();
+        // rack.printSensors();
+        
+        // rack.inlet.history->push(rack.inlet.temp);   // writing to something that's not memory?
+        // rack.printBuff(rack.inletHistory);
+        // rack.printBuff(rack.outletHistory);
+        // Serial.print("\n");
+    }
+
 
     if (millis() - MQTT_sensor_timer >= 10000)
     {
@@ -95,40 +84,51 @@ void loop() {
         client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
     }
 
-    // setFanSpeed(fanPin1, pwmValue);
-    // setFanSpeed(fanPin2, pwmValue);
-
     handleSerial();
-    delay(500);
+    // delay(500);
     client.loop();
 }
 
 void handleSerial() {         // Must imput single digit numbers with leading 0
-    boolean printValue = false;
+    // boolean printValue = false;
     while (Serial.available()) {
         char inputBuffer[6];
         Serial.readBytesUntil('\n', inputBuffer, 5);
 
         pwmValue = atoi(inputBuffer);
-        printValue = true;
-    }
-    
-    if (printValue) {
+        // printValue = true;
         rack.setFans(pwmValue);
         Serial.print("Current PWM = ");
         Serial.println(pwmValue);
-        Serial.flush();
     }
+    Serial.flush();
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived in topic: ");
     Serial.println(topic);
 
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
+    String topicStr = topic;    // Convert char to String
+    // payload[length] = '\0';
+    int payloadInt = atoi((char*)payload);  // convert payload to int
+    
+
+    if (topicStr = SUB_MAN_FAN) {
+        Serial.println(topicStr);
+    } else if (topicStr = SUB_INLET_FAN) {
+        Serial.println(topicStr);
+        rack.setFans(payloadInt);
+    } else if (topicStr = SUB_OUTLET_FAN) {
+        Serial.println(topicStr);
+        rack.setFans(payloadInt);
     }
+
+    Serial.println((String)"Payload to int:" + payloadInt);
+
+    // Serial.print("Message:");
+    // for (int i = 0; i < length; i++) {
+    //     Serial.print((char)payload[i]);
+    // }
 
     Serial.println();
     Serial.println("-----------------------");
