@@ -66,7 +66,7 @@ void loop() {
 
         rack.readSensors();
         // rack.printSensors();
-        
+
         // rack.inlet.history->push(rack.inlet.temp);   // writing to something that's not memory?
         // rack.printBuff(rack.inletHistory);
         // rack.printBuff(rack.outletHistory);
@@ -109,21 +109,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println(topic);
 
     String topicStr = topic;    // Convert char to String
-    // payload[length] = '\0';
+    payload[length] = '\0';     // Null terminate
     int payloadInt = atoi((char*)payload);  // convert payload to int
     
 
-    if (topicStr = SUB_MAN_FAN) {
+    if (topicStr == SUB_MAN_FAN) {
         Serial.println(topicStr);
-    } else if (topicStr = SUB_INLET_FAN) {
+    } else if (topicStr == SUB_INLET_FAN) {
         Serial.println(topicStr);
         rack.setFans(payloadInt);
-    } else if (topicStr = SUB_OUTLET_FAN) {
+    } else if (topicStr == SUB_OUTLET_FAN) {
         Serial.println(topicStr);
         rack.setFans(payloadInt);
     }
 
-    Serial.println((String)"Payload to int:" + payloadInt);
+    Serial.println((String)"Payload to int: " + payloadInt);
 
     // Serial.print("Message:");
     // for (int i = 0; i < length; i++) {

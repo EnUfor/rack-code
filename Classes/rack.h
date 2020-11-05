@@ -98,6 +98,7 @@ public:
     Zone outlet = Zone(0x77, OUTLETFANPIN);
     CircularBuffer<double, 20> inletHistory;
     CircularBuffer<double, 20> outletHistory;
+    int manualFans = 0;
 
     /**
      * Read sensor values
@@ -134,7 +135,7 @@ public:
     }
 
     void setFans(int speed) {
-        Serial.println((String)"setFans Ran: " + speed);
+        // Serial.println((String)"setFans Ran: " + speed);
         inlet.setFanSpeed(speed);
         outlet.setFanSpeed(speed);
     }
