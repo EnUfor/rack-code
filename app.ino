@@ -15,8 +15,6 @@ unsigned int MQTT_delay = MQTT_initial_delay;
 
 String clientId;
 
-int pwmValue = 1024;    // Initial pwm
-
 // Initiate WiFi & MQTT
 WiFiClient wificlient;
 PubSubClient client(wificlient);
@@ -95,42 +93,39 @@ void handleSerial() {         // Must imput single digit numbers with leading 0
         char inputBuffer[6];
         Serial.readBytesUntil('\n', inputBuffer, 5);
 
-        pwmValue = atoi(inputBuffer);
-        // printValue = true;
-        rack.setFans(pwmValue);
-        Serial.print("Current PWM = ");
-        Serial.println(pwmValue);
+        int inputFanSpeed = atoi(inputBuffer);
+        rack.setFans(inputFanSpeed);
+        Serial.print((String)"Current PWM = " + inputFanSpeed);
     }
     Serial.flush();
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-    Serial.print("Message arrived in topic: ");
-    Serial.println(topic);
+    // Serial.print("Message arrived in topic: ");
+    // Serial.println(topic);
 
     String topicStr = topic;    // Convert char to String
     payload[length] = '\0';     // Null terminate
     int payloadInt = atoi((char*)payload);  // convert payload to int
     
+    Serial.println((String)"Topic: " + topicStr);
+    Serial.println((String)"Payload: " + payloadInt);
 
     if (topicStr == SUB_MAN_FAN) {
-        Serial.println(topicStr);
+        rack.manualFans = payloadInt;
+        client.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
     } else if (topicStr == SUB_INLET_FAN) {
-        Serial.println(topicStr);
-        rack.setFans(payloadInt);
+        if (rack.manualFans)
+        {
+            rack.inlet.setFanSpeed(payloadInt);
+        }    
     } else if (topicStr == SUB_OUTLET_FAN) {
-        Serial.println(topicStr);
-        rack.setFans(payloadInt);
+        if (rack.manualFans)
+        {
+            rack.outlet.setFanSpeed(payloadInt);
+        }
     }
 
-    Serial.println((String)"Payload to int: " + payloadInt);
-
-    // Serial.print("Message:");
-    // for (int i = 0; i < length; i++) {
-    //     Serial.print((char)payload[i]);
-    // }
-
-    Serial.println();
     Serial.println("-----------------------");
 }
 

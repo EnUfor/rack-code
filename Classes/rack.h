@@ -98,7 +98,7 @@ public:
     Zone outlet = Zone(0x77, OUTLETFANPIN);
     CircularBuffer<double, 20> inletHistory;
     CircularBuffer<double, 20> outletHistory;
-    int manualFans = 0;
+    bool manualFans = false;
 
     /**
      * Read sensor values
