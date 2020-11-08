@@ -64,11 +64,6 @@ void loop() {
 
         rack.readSensors();
         // rack.printSensors();
-
-        // rack.inlet.history->push(rack.inlet.temp);   // writing to something that's not memory?
-        // rack.printBuff(rack.inletHistory);
-        // rack.printBuff(rack.outletHistory);
-        // Serial.print("\n");
     }
 
 
@@ -80,6 +75,11 @@ void loop() {
         client.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
         client.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
         client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
+
+        if(!rack.manualFans) {
+            client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
+            client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
+        }
     }
 
     handleSerial();
@@ -87,8 +87,7 @@ void loop() {
     client.loop();
 }
 
-void handleSerial() {         // Must imput single digit numbers with leading 0
-    // boolean printValue = false;
+void handleSerial() {
     while (Serial.available()) {
         char inputBuffer[6];
         Serial.readBytesUntil('\n', inputBuffer, 5);
@@ -101,9 +100,6 @@ void handleSerial() {         // Must imput single digit numbers with leading 0
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-    // Serial.print("Message arrived in topic: ");
-    // Serial.println(topic);
-
     String topicStr = topic;    // Convert char to String
     payload[length] = '\0';     // Null terminate
     int payloadInt = atoi((char*)payload);  // convert payload to int
@@ -125,8 +121,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
             rack.outlet.setFanSpeed(payloadInt);
         }
     }
-
-    Serial.println("-----------------------");
 }
 
 // Connects ESP8266 to Wi-Fi

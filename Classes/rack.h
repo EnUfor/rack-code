@@ -38,9 +38,9 @@ public:
     }
 
     void setFanSpeed(int speed) {
+        fanSpeed = speed;
         speed = map(speed, 0, 100, 0, 1024);
         analogWrite(pwmPin, speed);
-        fanSpeed = speed;
 
         if (speed <= 0) {            // Turn off fans if either speed 0
             digitalWrite(FANPOWER, LOW);
