@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h>
+#include <PID_v1.h>
 #include "config.h"     // Turns out you need to use quotes for relative imports (2 hrs wasted)
 // #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
 #include "Classes/rack.h"
@@ -12,6 +13,12 @@ unsigned long printDelay;
 
 int MQTT_initial_delay = 10000;
 unsigned int MQTT_delay = MQTT_initial_delay;
+
+// PID related variables
+double setTemp, currentTemp, pidSpeed;
+double Kp = 9.0; double Ki = 2.0;  double Kd = 0.5;
+
+PID pid(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE);    // Reverse since we're cooling
 
 String clientId;
 
@@ -24,6 +31,10 @@ Rack rack;
 void setup() {
     delay(2000);    // delay to ensure serial monitor is connected
     Serial.begin(115200);
+
+    pid.SetOutputLimits(0, 100);
+    pid.SetMode(AUTOMATIC);
+
     clientId = "ESP-";
     clientId += system_get_chip_id();
     Serial.println((String)"clientId: " + clientId);
@@ -36,9 +47,9 @@ void setup() {
 
     connect_MQTT();
 
+    client.subscribe(SUB_MAN_FAN);  // Sub first to get state
     client.subscribe(SUB_INLET_FAN);
     client.subscribe(SUB_OUTLET_FAN);
-    client.subscribe(SUB_MAN_FAN);
 
     MQTT_sensor_timer = millis();
     MQTT_reconnect_timer = millis();
@@ -64,6 +75,17 @@ void loop() {
 
         rack.readSensors();
         // rack.printSensors();
+
+        currentTemp = rack.outlet.temp;
+        setTemp = 74.0;
+        if (!rack.manualFans) {
+            pid.Compute();
+            rack.setFans((int)pidSpeed);
+        }
+        
+        Serial.println((String)"pidSpeed: " + pidSpeed);
+        Serial.println((String)"currentTemp: " + currentTemp);
+
     }
 
 
@@ -83,7 +105,6 @@ void loop() {
     }
 
     handleSerial();
-    // delay(500);
     client.loop();
 }
 
@@ -94,6 +115,8 @@ void handleSerial() {
 
         int inputFanSpeed = atoi(inputBuffer);
         rack.setFans(inputFanSpeed);
+        rack.manualFans = false;
+        client.publish(PUB_MAN_FAN_STATE, "0");       // Let HA know it's no longer in control
         Serial.print((String)"Current PWM = " + inputFanSpeed);
     }
     Serial.flush();
