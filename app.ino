@@ -7,10 +7,27 @@
 // #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
 #include "Classes/rack.h"
 
+class Circle {
+public:
+    double radius;
+    Circle(double r)
+    {
+        radius = r;
+    }
+
+    double circum()
+    {
+        return 2*radius*3.14159265;
+    }
+};
+
+void tempi() {
+    Circle circ(2.3);
+}
+
 class ESP0
 {
 private:
-    /* data */
     
 public:
     ESP0();
@@ -18,10 +35,22 @@ public:
     double Kp = 9.0;
     double Ki = 2.0;
     double Kd = 0.5;
-    PID pid(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
+    Circle circly = Circle(2.4);
+    // PID pid(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
+    // PID peo(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
+
+    PID pjfd = PID(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, 1);
+
+    double hiieidide() {
+        return circly.circum();
+        
+    }
 };
 
-ESP0::ESP0(){}
+ESP0::ESP0()
+{
+
+}
 
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
@@ -51,7 +80,7 @@ void setup() {
     delay(2000);    // delay to ensure serial monitor is connected
     Serial.begin(115200);
 
-    espoooo.pid->SetOutputLimits(0, 100):
+    espoooo.pjfd.SetOutputLimits(0, 100);
 
     pid.SetOutputLimits(0, 100);
     pid.SetMode(AUTOMATIC);
