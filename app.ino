@@ -7,6 +7,22 @@
 // #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
 #include "Classes/rack.h"
 
+class ESP0
+{
+private:
+    /* data */
+    
+public:
+    ESP0();
+    double setTemp, currentTemp, pidSpeed;
+    double Kp = 9.0;
+    double Ki = 2.0;
+    double Kd = 0.5;
+    PID pid(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
+};
+
+ESP0::ESP0(){}
+
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
 unsigned long printDelay;
@@ -27,10 +43,15 @@ WiFiClient wificlient;
 PubSubClient client(wificlient);
 
 Rack rack;
+ESP0 espoooo;
+
+
 
 void setup() {
     delay(2000);    // delay to ensure serial monitor is connected
     Serial.begin(115200);
+
+    espoooo.pid->SetOutputLimits(0, 100):
 
     pid.SetOutputLimits(0, 100);
     pid.SetMode(AUTOMATIC);
@@ -77,7 +98,7 @@ void loop() {
         // rack.printSensors();
 
         currentTemp = rack.outlet.temp;
-        setTemp = 74.0;
+        setTemp = rack.inlet.temp + 5.0;
         if (!rack.manualFans) {
             pid.Compute();
             rack.setFans((int)pidSpeed);
