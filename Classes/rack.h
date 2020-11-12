@@ -18,7 +18,7 @@ private:
     }
     
 public:
-    Zone();
+    Zone() {};
     BME280_I2C sensor;
     // CircularBuffer<double, 20> *history;    // 3? hours wasted for a single * (which didn't make anything better)
     // I hate CircularBuffer(s) now
@@ -52,9 +52,6 @@ public:
     }
 };
 
-Zone::Zone()
-{
-}
 
 class Rack
 {
@@ -92,7 +89,9 @@ private:
         setFans(100);
     }
 public:
-    Rack();
+    Rack() {
+        setup();
+    };
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Zone inlet = Zone(0x76, INLETFANPIN);
     Zone outlet = Zone(0x77, OUTLETFANPIN);
@@ -140,21 +139,3 @@ public:
         outlet.setFanSpeed(speed);
     }
 };
-
-Rack::Rack()
-{
-    setup();
-}
-
-void thingy() {
-    // Rack testing;
-    // Zone zont;
-
-    // zont.history[1];
-
-    // CircularBuffer<double, 20> hellos;
-    // hellos.operator[](2);
-
-    
-
-}

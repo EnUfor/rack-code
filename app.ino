@@ -10,31 +10,33 @@
 class ESP0
 {
 private:
+
     void setup() {
-        pjfd.SetOutputLimits(0, 100);
-        pjfd.SetMode(AUTOMATIC);
+        pid.SetOutputLimits(0, 100);
+        pid.SetMode(AUTOMATIC);
+
+        clientId = "ESP-";
+        clientId += system_get_chip_id();
+        Serial.println((String)"clientId: " + clientId);
     }
 
     double Kp = 9.0;
     double Ki = 2.0;
     double Kd = 0.5;
+
+    WiFiClient wificlient1;
+    
 public:
     ESP0() {
         setup();
     }
+    String clientId;
 
     double setTemp, currentTemp, pidSpeed;
+    PID pid = PID(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE);    // Reverse since we're cooling
 
-    // PID pid(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
-    // PID peo(double &currentTemp, double &pidSpeed, double &setTemp, double &Kp, double &Ki, double &Kd, int test = REVERSE);
-
-    PID pjfd = PID(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, 1);
+    PubSubClient client = PubSubClient(wificlient1);
 };
-
-// ESP0::ESP0()
-// {
-//     setup();
-// }
 
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
@@ -43,11 +45,11 @@ unsigned long printDelay;
 int MQTT_initial_delay = 10000;
 unsigned int MQTT_delay = MQTT_initial_delay;
 
-// PID related variables
+// // PID related variables
 double setTemp, currentTemp, pidSpeed;
 double Kp = 9.0; double Ki = 2.0;  double Kd = 0.5;
 
-PID pid(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE);    // Reverse since we're cooling
+// PID pid(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE);    // Reverse since we're cooling
 
 String clientId;
 
@@ -62,10 +64,8 @@ void setup() {
     delay(2000);    // delay to ensure serial monitor is connected
     Serial.begin(115200);
 
-    espoooo.pjfd.SetOutputLimits(0, 100);
-
-    pid.SetOutputLimits(0, 100);
-    pid.SetMode(AUTOMATIC);
+    // pid.SetOutputLimits(0, 100);
+    // pid.SetMode(AUTOMATIC);
 
     clientId = "ESP-";
     clientId += system_get_chip_id();
@@ -111,7 +111,7 @@ void loop() {
         currentTemp = rack.outlet.temp;
         setTemp = rack.inlet.temp + 5.0;
         if (!rack.manualFans) {
-            pid.Compute();
+            espoooo.pid.Compute();
             rack.setFans((int)pidSpeed);
         }
         
