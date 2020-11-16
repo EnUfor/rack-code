@@ -1,5 +1,3 @@
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
 #include <PID_v1.h>
 #include "rack.h"
 

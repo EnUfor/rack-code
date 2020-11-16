@@ -1,12 +1,10 @@
 #include <Arduino.h>
-// #include <ESP8266WiFi.h>
-// #include <PubSubClient.h>
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 #include <Wire.h>
-// #include <PID_v1.h>
-#include "config.h"     // Turns out you need to use quotes for relative imports (2 hrs wasted)
-// #include "fanCurve.h"   // Also turns out the includes' first character has to be lower case (10 min wasted)
-// #include "Classes/rack.h"
-#include "Classes/ESP0.h"
+#include "config.h"         // Must be defined after PubSubClient
+#include "Classes/ESP0.h"   // Must be defined after config
+
 
 
 unsigned long MQTT_sensor_timer;
