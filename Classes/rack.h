@@ -2,16 +2,32 @@
 #include <CircularBuffer.h>
 #include "../pins.h"
 
+// CircularBuffer<double, 20> historytemp;
+
 class Zone
 {
 private:
-    
+    /**
+     * Initiates BME280 sensor using I2C address
+     * Sets proper temp offset based on sensor address
+     * Sets online state if successful
+    **/ 
     void setupSensor(uint8_t address) {
         sensor = BME280_I2C(address);
-        sensor.setTempCal(-1);
+        if (address == 0x76)
+        {
+            sensor.setTempCal(-.8);
+        } else
+        {
+            sensor.setTempCal(-1);
+        }
         if (sensor.begin()) {online = true;}
     }
     
+    /**
+     * Initiates output PWM pin
+     * Sets pwmPin to appropriate pin number
+    **/ 
     void setupPin(int pin) {
         pwmPin = pin;
         pinMode(pin, OUTPUT);
@@ -22,21 +38,23 @@ public:
     BME280_I2C sensor;
     // CircularBuffer<double, 20> *history;    // 3? hours wasted for a single * (which didn't make anything better)
     // I hate CircularBuffer(s) now
+    // CircularBuffer<double, 20> *historytemp;
+    // int twenty = 20;
+    // CircularBuffer *perod(double, int twenty);
     double temp;
     double humidity;
     int fanSpeed;
     bool online = false;
     int pwmPin;
 
-    // Zone(uint8_t address) {
-    //     setupSensor(address);
-    // }
-
     Zone(uint8_t address, int pin) {
         setupSensor(address);
         setupPin(pin);
     }
 
+    /**
+     * Set fan speed for a particular zone
+    **/ 
     void setFanSpeed(int speed) {
         fanSpeed = speed;
         speed = map(speed, 0, 100, 0, 1024);
@@ -65,7 +83,6 @@ private:
             zone.sensor.readSensor();
             zone.temp = zone.sensor.getTemperature_F();
             zone.humidity = zone.sensor.getHumidity();
-            // zone.history->push(zone.temp);
         }
     }
 
@@ -86,7 +103,7 @@ private:
     void setup() {
         pinMode(FANPOWER, OUTPUT);
         pinMode(LEDPIN, OUTPUT);
-        setFans(100);
+        setFans(100);       // Set fans to 100% on class declaration
     }
 public:
     Rack() {
@@ -107,6 +124,7 @@ public:
         reader(outlet);
         inletHistory.push(inlet.temp);
         outletHistory.push(outlet.temp);
+        // inlet.historytemp->push(inlet.temp);
     }
 
     /**
@@ -133,6 +151,9 @@ public:
         Serial.print("\n");
     }
 
+    /**
+     * Sets both fan speeds simultaneously
+    **/ 
     void setFans(int speed) {
         // Serial.println((String)"setFans Ran: " + speed);
         inlet.setFanSpeed(speed);

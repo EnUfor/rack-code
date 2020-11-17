@@ -69,7 +69,6 @@ public:
     }
 
     void loop() {
-        //Loop here
         handleSerial();
         client.loop();
     }

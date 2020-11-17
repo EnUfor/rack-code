@@ -5,8 +5,6 @@
 #include "config.h"         // Must be defined after PubSubClient
 #include "Classes/ESP0.h"   // Must be defined after config
 
-
-
 unsigned long MQTT_sensor_timer;
 unsigned long MQTT_reconnect_timer;
 unsigned long printDelay;
