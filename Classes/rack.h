@@ -2,8 +2,6 @@
 #include <CircularBuffer.h>
 #include "../pins.h"
 
-// CircularBuffer<double, 20> historytemp;
-
 class Zone
 {
 private:
@@ -36,11 +34,8 @@ private:
 public:
     Zone() {};
     BME280_I2C sensor;
-    // CircularBuffer<double, 20> *history;    // 3? hours wasted for a single * (which didn't make anything better)
+    // CircularBuffer<double, 20> *historytemp;    // 3? hours wasted for a single * (which didn't make anything better)
     // I hate CircularBuffer(s) now
-    // CircularBuffer<double, 20> *historytemp;
-    // int twenty = 20;
-    // CircularBuffer *perod(double, int twenty);
     double temp;
     double humidity;
     int fanSpeed;
@@ -124,7 +119,6 @@ public:
         reader(outlet);
         inletHistory.push(inlet.temp);
         outletHistory.push(outlet.temp);
-        // inlet.historytemp->push(inlet.temp);
     }
 
     /**
