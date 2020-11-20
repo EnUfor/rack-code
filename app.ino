@@ -25,12 +25,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (topicStr == SUB_MAN_FAN) {
         rack.manualFans = payloadInt;
         esp0.client.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
+        rack.inlet.setFanSpeed(esp0.subInletFan);
+        rack.outlet.setFanSpeed(esp0.subOutletFan);
     } else if (topicStr == SUB_INLET_FAN) {
+        esp0.subInletFan = payloadInt;
         if (rack.manualFans)
         {
             rack.inlet.setFanSpeed(payloadInt);
         }    
     } else if (topicStr == SUB_OUTLET_FAN) {
+        esp0.subOutletFan = payloadInt;
         if (rack.manualFans)
         {
             rack.outlet.setFanSpeed(payloadInt);

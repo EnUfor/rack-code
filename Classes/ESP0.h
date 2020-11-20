@@ -46,6 +46,9 @@ public:
 
     PubSubClient client = PubSubClient(wificlient);
 
+    int subInletFan;
+    int subOutletFan;
+
     // Setup routine (not run on class declaration)
     void setup() {
         pid.SetOutputLimits(0, 100);
