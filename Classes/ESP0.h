@@ -51,7 +51,7 @@ public:
 
     // Setup routine (not run on class declaration)
     void setup() {
-        pid.SetOutputLimits(0, 100);
+        pid.SetOutputLimits(1, 100);
         pid.SetMode(AUTOMATIC);
 
         clientId = "ESP-";
@@ -99,5 +99,5 @@ public:
         Serial.print((String)"Current PWM = " + inputFanSpeed);
     }
     Serial.flush();
-}
+    }
 };

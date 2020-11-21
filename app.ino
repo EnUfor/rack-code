@@ -25,6 +25,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     if (topicStr == SUB_MAN_FAN) {
         rack.manualFans = payloadInt;
         esp0.client.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
+        
+        // Set fans to what was last recieved from MQTT
         rack.inlet.setFanSpeed(esp0.subInletFan);
         rack.outlet.setFanSpeed(esp0.subOutletFan);
     } else if (topicStr == SUB_INLET_FAN) {
@@ -73,10 +75,10 @@ void loop() {
 
         rack.readSensors();
         // rack.printSensors();
-
-        esp0.currentTemp = rack.outlet.temp;
-        esp0.setTemp = rack.inlet.temp + 5.0;
+        
         if (!rack.manualFans) {
+            esp0.currentTemp = rack.outlet.temp;
+            esp0.setTemp = rack.inlet.temp + 5.0;
             esp0.pid.Compute();
             rack.setFans((int)esp0.pidSpeed);
         }
