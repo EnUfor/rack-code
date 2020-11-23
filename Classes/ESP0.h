@@ -42,11 +42,9 @@ public:
     ESP0() {};
 
     double setTemp, currentTemp, pidSpeed;
-    PID pid = PID(&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE);    // Reverse since we're cooling
-
-    PubSubClient client = PubSubClient(wificlient);
-
-    PubSubClient client2 = {wificlient};
+    PID pid = {&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE};     // Reverse since we're cooling
+    
+    PubSubClient client = {wificlient};
 
     int subInletFan;
     int subOutletFan;

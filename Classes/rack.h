@@ -104,11 +104,14 @@ public:
     Rack() {
         setup();
     };
+
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
-    Zone inlet = Zone(0x76, INLETFANPIN);
-    Zone outlet = Zone(0x77, OUTLETFANPIN);
+    Zone inlet = {0x76, INLETFANPIN};
+    Zone outlet = {0x77, OUTLETFANPIN};    
+
     CircularBuffer<double, 20> inletHistory;
     CircularBuffer<double, 20> outletHistory;
+
     bool manualFans = false;
 
     /**
@@ -146,7 +149,7 @@ public:
     }
 
     /**
-     * Sets both fan speeds simultaneously
+     * Sets both fan speeds "simultaneously"
     **/ 
     void setFans(int speed) {
         // Serial.println((String)"setFans Ran: " + speed);
