@@ -46,6 +46,8 @@ public:
 
     PubSubClient client = PubSubClient(wificlient);
 
+    PubSubClient client2 = {wificlient};
+
     int subInletFan;
     int subOutletFan;
 
@@ -88,16 +90,17 @@ public:
     }
 
     void handleSerial() {
-    while (Serial.available()) {
-        char inputBuffer[6];
-        Serial.readBytesUntil('\n', inputBuffer, 5);
+        while (Serial.available()) {
+            char inputBuffer[6];
+            Serial.readBytesUntil('\n', inputBuffer, 5);
+            int inputFanSpeed = atoi(inputBuffer);
 
-        int inputFanSpeed = atoi(inputBuffer);
-        rack.setFans(inputFanSpeed);
-        rack.manualFans = false;
-        client.publish(PUB_MAN_FAN_STATE, "0");       // Let HA know it's no longer in control
-        Serial.print((String)"Current PWM = " + inputFanSpeed);
-    }
-    Serial.flush();
+            rack.setFans(inputFanSpeed);
+            rack.manualFans = false;
+            client.publish(PUB_MAN_FAN_STATE, "0");       // Let HA know it's no longer in control
+            
+            Serial.print((String)"Current PWM = " + inputFanSpeed);
+        }
+        Serial.flush();
     }
 };
