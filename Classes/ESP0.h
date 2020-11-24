@@ -15,7 +15,13 @@ private:
 
     String clientId;
 
-    // Connects ESP8266 to Wi-Fi
+    unsigned long MQTT_reconnect_timer;
+    int MQTT_initial_delay = 10000;
+    int MQTT_delay = MQTT_initial_delay;
+
+    /*
+     * Connects ESP8266 to Wi-Fi
+     */
     void connect_wifi() {
         WiFi.begin(SSID, WIFI_PASSWORD);
         Serial.println((String)"Connecting to SSID: " + SSID);
@@ -49,7 +55,9 @@ public:
     int subInletFan;
     int subOutletFan;
 
-    // Setup routine (not run on class declaration)
+    /*
+     * Setup Routine (not run on class declaration)
+     */
     void setup() {
         pid.SetOutputLimits(1, 100);
         pid.SetMode(AUTOMATIC);
@@ -69,14 +77,33 @@ public:
         client.subscribe(SUB_MAN_FAN);  // Sub first to get state
         client.subscribe(SUB_INLET_FAN);
         client.subscribe(SUB_OUTLET_FAN);
-    }
 
+        MQTT_reconnect_timer = millis();
+    }
+    /*
+     * Loop Routine
+     */
     void loop() {
+        // If WiFi is connected, MQTT is not connected, and delay is satisfied: reconnect MQTT
+        if (WiFi.status() == WL_CONNECTED && !client.connected() && (millis() - MQTT_reconnect_timer >= MQTT_delay)) {
+            MQTT_reconnect_timer = millis();
+            connect_MQTT();
+            if (!client.connected() && MQTT_delay < 60000)  // IF not successful and delay is less than 60 seconds
+            {
+                MQTT_delay += 10000;    // Increase delay to avoid unecessary reconnect tries
+            } else
+            {
+                MQTT_delay = MQTT_initial_delay;     // Reset delay
+            }
+        }
+        
         handleSerial();
         client.loop();
     }
 
-    // Connects to MQTT broker
+    /*
+     * Connects to MQTT broker
+     */
     void connect_MQTT() {
         Serial.println((String)"Connecting to MQTT: " + MQTT_SERVER);
         if (client.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
@@ -87,6 +114,9 @@ public:
         Serial.println('\n');
     }
 
+    /*
+     * Handles input from serial
+     */
     void handleSerial() {
         while (Serial.available()) {
             char inputBuffer[6];

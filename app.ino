@@ -6,15 +6,11 @@
 #include "Classes/ESP0.h"   // Must be defined after config
 
 unsigned long MQTT_sensor_timer;
-unsigned long MQTT_reconnect_timer;
 unsigned long printDelay;
-
-int MQTT_initial_delay = 10000;
-unsigned int MQTT_delay = MQTT_initial_delay;
 
 ESP0 esp0;
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char* topic, uint8_t* payload, unsigned int length) {
     String topicStr = topic;    // Convert char to String
     payload[length] = '\0';     // Null terminate
     int payloadInt = atoi((char*)payload);  // convert payload to int
@@ -52,24 +48,10 @@ void setup() {
     esp0.setup();
 
     MQTT_sensor_timer = millis();
-    MQTT_reconnect_timer = millis();
     printDelay = millis();
 }
 
 void loop() {
-    // If WiFi is connected, MQTT is not connected, and delay is satisfied: reconnect MQTT
-    if (WiFi.status() == WL_CONNECTED && !esp0.client.connected() && (millis() - MQTT_reconnect_timer >= MQTT_delay)) {
-        MQTT_reconnect_timer = millis();
-        esp0.connect_MQTT();
-        if (!esp0.client.connected() && MQTT_delay < 60000)  // IF not successful and delay is less than 60 seconds
-        {
-            MQTT_delay += 10000;    // Increase delay to avoid unecessary reconnect tries
-        } else
-        {
-            MQTT_delay = MQTT_initial_delay;     // Reset delay
-        }
-    }
-
     if (millis() - printDelay >= 500) {
         printDelay = millis();
 
