@@ -5,7 +5,6 @@
 #include "config.h"         // Must be defined after PubSubClient
 #include "Classes/ESP0.h"   // Must be defined after config
 
-unsigned long MQTT_sensor_timer;
 unsigned long printDelay;
 
 ESP0 esp0;
@@ -47,7 +46,6 @@ void setup() {
     esp0.client.setCallback(callback);
     esp0.setup();
 
-    MQTT_sensor_timer = millis();
     printDelay = millis();
 }
 
@@ -68,22 +66,6 @@ void loop() {
         Serial.println((String)"pidSpeed: " + esp0.pidSpeed);
         Serial.println((String)"currentTemp: " + esp0.currentTemp);
 
-    }
-
-
-    if (millis() - MQTT_sensor_timer >= 10000)
-    {
-        MQTT_sensor_timer = millis();
-
-        esp0.client.publish(PUB_INLET_TEMP, String(rack.inlet.temp).c_str());
-        esp0.client.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
-        esp0.client.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
-        esp0.client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
-
-        if(!rack.manualFans) {
-            esp0.client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
-            esp0.client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
-        }
     }
 
     esp0.loop();

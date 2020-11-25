@@ -107,11 +107,11 @@ public:
 
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Zone inlet = {0x76, INLETFANPIN};
-    Zone outlet = {0x77, OUTLETFANPIN};    
+    Zone outlet = {0x77, OUTLETFANPIN};
 
     CircularBuffer<double, 20> inletHistory;
     CircularBuffer<double, 20> outletHistory;
-
+    
     bool manualFans = false;
 
     /**

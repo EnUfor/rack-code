@@ -19,6 +19,8 @@ private:
     int MQTT_initial_delay = 10000;
     int MQTT_delay = MQTT_initial_delay;
 
+    unsigned long MQTT_publish_timer;
+
     /*
      * Connects ESP8266 to Wi-Fi
      */
@@ -79,6 +81,7 @@ public:
         client.subscribe(SUB_OUTLET_FAN);
 
         MQTT_reconnect_timer = millis();
+        MQTT_publish_timer = millis();
     }
     /*
      * Loop Routine
@@ -94,6 +97,21 @@ public:
             } else
             {
                 MQTT_delay = MQTT_initial_delay;     // Reset delay
+            }
+        }
+
+        if (millis() - MQTT_publish_timer >= 10000)
+        {
+            MQTT_publish_timer = millis();
+
+            client.publish(PUB_INLET_TEMP, String(rack.inlet.temp).c_str());
+            client.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
+            client.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
+            client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
+
+            if(!rack.manualFans) {
+                client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
+                client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
             }
         }
         
