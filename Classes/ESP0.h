@@ -109,13 +109,11 @@ public:
 
             client.publish(PUB_INLET_TEMP, String(rack.inlet.temp).c_str());
             client.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
+            client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
+
             client.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
             client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
-
-            if(!rack.manualFans) {
-                client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
-                client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
-            }
+            client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
         }
 
         if (millis() - PID_timer >= 500) {
@@ -129,10 +127,11 @@ public:
                 setTemp = rack.inlet.temp + 5.0;
                 pid.Compute();
                 rack.setFans((int)pidSpeed);
+
+                Serial.print((String)"pidSpeed: " + pidSpeed + "\t");
+                Serial.print((String)"currentTemp: " + currentTemp + "\t");
+                Serial.print((String)"setTemp: " + setTemp + "\n");
             }
-            
-            Serial.println((String)"pidSpeed: " + pidSpeed);
-            Serial.println((String)"currentTemp: " + currentTemp);
         }
         
         handleSerial();
@@ -162,8 +161,8 @@ public:
             int inputFanSpeed = atoi(inputBuffer);
 
             rack.setFans(inputFanSpeed);
-            rack.manualFans = false;
-            client.publish(PUB_MAN_FAN_STATE, "0");       // Let HA know it's no longer in control
+            rack.manualFans = true;                 // Prevent PID calcs, still publish speeds
+            client.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
             
             Serial.print((String)"Current PWM = " + inputFanSpeed);
         }
