@@ -21,6 +21,8 @@ private:
 
     unsigned long MQTT_publish_timer;
 
+    unsigned long PID_timer;
+
     /*
      * Connects ESP8266 to Wi-Fi
      */
@@ -82,6 +84,7 @@ public:
 
         MQTT_reconnect_timer = millis();
         MQTT_publish_timer = millis();
+        PID_timer = millis();
     }
     /*
      * Loop Routine
@@ -113,6 +116,23 @@ public:
                 client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
                 client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
             }
+        }
+
+        if (millis() - PID_timer >= 500) {
+            PID_timer = millis();
+
+            rack.readSensors();
+            // rack.printSensors();
+            
+            if (!rack.manualFans) {
+                currentTemp = rack.outlet.temp;
+                setTemp = rack.inlet.temp + 5.0;
+                pid.Compute();
+                rack.setFans((int)pidSpeed);
+            }
+            
+            Serial.println((String)"pidSpeed: " + pidSpeed);
+            Serial.println((String)"currentTemp: " + currentTemp);
         }
         
         handleSerial();

@@ -5,8 +5,6 @@
 #include "config.h"         // Must be defined after PubSubClient
 #include "Classes/ESP0.h"   // Must be defined after config
 
-unsigned long printDelay;
-
 ESP0 esp0;
 
 void callback(char* topic, uint8_t* payload, unsigned int length) {
@@ -45,28 +43,8 @@ void setup() {
 
     esp0.client.setCallback(callback);
     esp0.setup();
-
-    printDelay = millis();
 }
 
 void loop() {
-    if (millis() - printDelay >= 500) {
-        printDelay = millis();
-
-        rack.readSensors();
-        // rack.printSensors();
-        
-        if (!rack.manualFans) {
-            esp0.currentTemp = rack.outlet.temp;
-            esp0.setTemp = rack.inlet.temp + 5.0;
-            esp0.pid.Compute();
-            rack.setFans((int)esp0.pidSpeed);
-        }
-        
-        Serial.println((String)"pidSpeed: " + esp0.pidSpeed);
-        Serial.println((String)"currentTemp: " + esp0.currentTemp);
-
-    }
-
     esp0.loop();
 }
