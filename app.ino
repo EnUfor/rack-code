@@ -3,7 +3,7 @@
 #include <PubSubClient.h>
 #include <Wire.h>
 #include "config.h"         // Must be defined after PubSubClient
-#include "Classes/ESP0.h"   // Must be defined after config
+#include "esp0.h"   // Must be defined after config
 
 ESP0 esp0;
 

@@ -164,7 +164,7 @@ public:
             rack.manualFans = true;                 // Prevent PID calcs, still publish speeds
             client.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
             
-            Serial.print((String)"Current PWM = " + inputFanSpeed);
+            Serial.println((String)"Current PWM = " + inputFanSpeed);
         }
         Serial.flush();
     }
