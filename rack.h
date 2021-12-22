@@ -1,8 +1,13 @@
-#ifndef _Rack2_h_
+#include <cactus_io_BME280_I2C.h>
+#include <CircularBuffer.h>
+#include "pins.h"
+#include "zone.h"
 
-#define _Rack2_h_
+#ifndef _Rack_h_
 
-class Rack2
+#define _Rack_h_
+
+class Rack
 {
 private:
     void setup();
@@ -10,7 +15,7 @@ private:
     void printer(String name, Zone zone);
 
 public:
-    Rack2();
+    Rack();
 
     // NodeMCU ESP8266 pinout: SCL = 5 (D1) SDA = 4 (D2)
     Zone inlet = {0x76, INLETFANPIN};

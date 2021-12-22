@@ -1,18 +1,13 @@
-#include <cactus_io_BME280_I2C.h>
-#include <CircularBuffer.h>
-#include "pins.h"
-#include "zone.h"
-
-#include "rack2.h"
+#include "rack.h"
 
 // Constructors
-Rack2::Rack2() {
+Rack::Rack() {
     setup();
 }
 
 
 // Private
-void Rack2::setup() {
+void Rack::setup() {
     pinMode(FANPOWER, OUTPUT);
     pinMode(LEDPIN, OUTPUT);
     setFans(100);       // Set fans to 100% on class declaration
@@ -22,7 +17,7 @@ void Rack2::setup() {
  * Read sensor and set respective values
  * Must be passed by reference (3 hrs wasted)
 **/    
-void Rack2::reader(Zone& zone) {
+void Rack::reader(Zone& zone) {
     if (zone.online) {
         zone.sensor.readSensor();
         zone.temp = zone.sensor.getTemperature_F();
@@ -33,7 +28,7 @@ void Rack2::reader(Zone& zone) {
 /**
  * Print sensor values to serial
 **/ 
-void Rack2::printer(String name, Zone zone) {
+void Rack::printer(String name, Zone zone) {
     Serial.print(name); Serial.print(":\t");
     if (zone.online) {
         Serial.print(zone.temp); Serial.print(" *F\t\t");
@@ -50,7 +45,7 @@ void Rack2::printer(String name, Zone zone) {
 /**
  * Read sensor values
 **/
-void Rack2::readSensors() {
+void Rack::readSensors() {
     reader(inlet);
     reader(outlet);
     inletHistory.push(inlet.temp);
@@ -60,7 +55,7 @@ void Rack2::readSensors() {
 /**
  * Print sensor values
 **/
-void Rack2::printSensors() {
+void Rack::printSensors() {
     printer("Inlet", inlet);
     printer("Outlet", outlet);
     Serial.println("\n");
@@ -69,7 +64,7 @@ void Rack2::printSensors() {
 /**
  * Print Buffer Values
 **/
-void Rack2::printBuff(CircularBuffer<double, 20> & buff) {
+void Rack::printBuff(CircularBuffer<double, 20> & buff) {
     for (int i = buff.size() - 1; i >= 0; i--)
     {
         Serial.print(buff.operator[](i));
@@ -85,7 +80,7 @@ void Rack2::printBuff(CircularBuffer<double, 20> & buff) {
 /**
  * Sets both fan speeds "simultaneously"
 **/ 
-void Rack2::setFans(int speed) {
+void Rack::setFans(int speed) {
     // Serial.println((String)"setFans Ran: " + speed);
     inlet.setFanSpeed(speed);
     outlet.setFanSpeed(speed);
