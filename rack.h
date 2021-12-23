@@ -10,7 +10,7 @@ class Rack
 {
 private:
     void setup();
-    void reader(Zone& zone);
+    void reader(Zone &zone);
     void printer(String name, Zone zone);
 
 public:
@@ -27,7 +27,7 @@ public:
 
     void readSensors();
     void printSensors();
-    void printBuff(CircularBuffer<double, 20> & buff);
+    void printBuff(CircularBuffer<double, 20> &buff);
     void setFans(int speed);
 };
 

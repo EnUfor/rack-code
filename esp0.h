@@ -9,7 +9,6 @@
 class ESP0
 {
 private:
-
     double Kp = 9.0;
     double Ki = 2.0;
     double Kd = 0.5;
@@ -28,14 +27,14 @@ private:
 
     void connect_wifi();
 
-    void callback(char* topic, uint8_t* payload, unsigned int length);
+    void callback(char *topic, uint8_t *payload, unsigned int length);
 
 public:
     ESP0();
 
     double setTemp, currentTemp, pidSpeed;
-    PID pid = {&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE};     // Reverse since we're cooling
-    
+    PID pid = {&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE}; // Reverse since we're cooling
+
     PubSubClient MQTTClient = {wificlient};
 
     int subInletFan;
