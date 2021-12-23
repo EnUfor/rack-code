@@ -48,6 +48,36 @@ private:
         Serial.println('\n');
     }
 
+    void somecallback(char* topic, uint8_t* payload, unsigned int length) {
+        String topicStr = topic;    // Convert char to String
+        payload[length] = '\0';     // Null terminate
+        int payloadInt = atoi((char*)payload);  // convert payload to int
+
+        Serial.println((String)"Topic: " + topicStr);
+        Serial.println((String)"Payload: " + payloadInt);
+
+        if (topicStr == SUB_MAN_FAN) {
+            rack.manualFans = payloadInt;
+            client.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
+            
+            // Set fans to what was last recieved from MQTT
+            rack.inlet.setFanSpeed(subInletFan);
+            rack.outlet.setFanSpeed(subOutletFan);
+        } else if (topicStr == SUB_INLET_FAN) {
+            subInletFan = payloadInt;
+            if (rack.manualFans)
+            {
+                rack.inlet.setFanSpeed(payloadInt);
+            }    
+        } else if (topicStr == SUB_OUTLET_FAN) {
+            subOutletFan = payloadInt;
+            if (rack.manualFans)
+            {
+                rack.outlet.setFanSpeed(payloadInt);
+            }
+        }
+    }
+
 public:
     ESP0() {};
 
@@ -71,6 +101,9 @@ public:
         Serial.println((String)"clientId: " + clientId);
 
         connect_wifi();
+
+        // No Clue: https://hobbytronics.com.pk/arduino-custom-library-and-pubsubclient-call-back/
+        client.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->somecallback(topic, payload, length); });
 
         // Initialize MQTT client
         client.setServer(MQTT_SERVER, MQTT_PORT);
