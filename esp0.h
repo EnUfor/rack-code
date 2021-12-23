@@ -48,7 +48,7 @@ private:
         Serial.println('\n');
     }
 
-    void somecallback(char* topic, uint8_t* payload, unsigned int length) {
+    void callback(char* topic, uint8_t* payload, unsigned int length) {
         String topicStr = topic;    // Convert char to String
         payload[length] = '\0';     // Null terminate
         int payloadInt = atoi((char*)payload);  // convert payload to int
@@ -58,7 +58,7 @@ private:
 
         if (topicStr == SUB_MAN_FAN) {
             rack.manualFans = payloadInt;
-            client.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
+            MQTTClient.publish(PUB_MAN_FAN_STATE, String(payloadInt).c_str());
             
             // Set fans to what was last recieved from MQTT
             rack.inlet.setFanSpeed(subInletFan);
@@ -84,7 +84,7 @@ public:
     double setTemp, currentTemp, pidSpeed;
     PID pid = {&currentTemp, &pidSpeed, &setTemp, Kp, Ki, Kd, REVERSE};     // Reverse since we're cooling
     
-    PubSubClient client = {wificlient};
+    PubSubClient MQTTClient = {wificlient};
 
     int subInletFan;
     int subOutletFan;
@@ -103,17 +103,17 @@ public:
         connect_wifi();
 
         // No Clue: https://hobbytronics.com.pk/arduino-custom-library-and-pubsubclient-call-back/
-        client.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->somecallback(topic, payload, length); });
+        MQTTClient.setCallback([this] (char* topic, byte* payload, unsigned int length) { this->callback(topic, payload, length); });
 
         // Initialize MQTT client
-        client.setServer(MQTT_SERVER, MQTT_PORT);
+        MQTTClient.setServer(MQTT_SERVER, MQTT_PORT);
         // callback set before setup is run
 
         connect_MQTT();
 
-        client.subscribe(SUB_MAN_FAN);  // Sub first to get state
-        client.subscribe(SUB_INLET_FAN);
-        client.subscribe(SUB_OUTLET_FAN);
+        MQTTClient.subscribe(SUB_MAN_FAN);  // Sub first to get state
+        MQTTClient.subscribe(SUB_INLET_FAN);
+        MQTTClient.subscribe(SUB_OUTLET_FAN);
 
         MQTT_reconnect_timer = millis();
         MQTT_publish_timer = millis();
@@ -124,10 +124,10 @@ public:
      */
     void loop() {
         // If WiFi is connected, MQTT is not connected, and delay is satisfied: reconnect MQTT
-        if (WiFi.status() == WL_CONNECTED && !client.connected() && (millis() - MQTT_reconnect_timer >= MQTT_delay)) {
+        if (WiFi.status() == WL_CONNECTED && !MQTTClient.connected() && (millis() - MQTT_reconnect_timer >= MQTT_delay)) {
             MQTT_reconnect_timer = millis();
             connect_MQTT();
-            if (!client.connected() && MQTT_delay < 60000)  // IF not successful and delay is less than 60 seconds
+            if (!MQTTClient.connected() && MQTT_delay < 60000)  // IF not successful and delay is less than 60 seconds
             {
                 MQTT_delay += 10000;    // Increase delay to avoid unecessary reconnect tries
             } else
@@ -140,13 +140,13 @@ public:
         {
             MQTT_publish_timer = millis();
 
-            client.publish(PUB_INLET_TEMP, String(rack.inlet.temp).c_str());
-            client.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
-            client.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
+            MQTTClient.publish(PUB_INLET_TEMP, String(rack.inlet.temp).c_str());
+            MQTTClient.publish(PUB_INLET_HUMID, String(rack.inlet.humidity).c_str());
+            MQTTClient.publish(PUB_INLET_FAN, String(rack.inlet.fanSpeed).c_str());
 
-            client.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
-            client.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
-            client.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
+            MQTTClient.publish(PUB_OUTLET_TEMP, String(rack.outlet.temp).c_str());
+            MQTTClient.publish(PUB_OUTLET_HUMID, String(rack.outlet.humidity).c_str());
+            MQTTClient.publish(PUB_OUTLET_FAN, String(rack.outlet.fanSpeed).c_str());
         }
 
         if (millis() - PID_timer >= 500) {
@@ -168,7 +168,7 @@ public:
         }
         
         handleSerial();
-        client.loop();
+        MQTTClient.loop();
     }
 
     /*
@@ -176,10 +176,10 @@ public:
      */
     void connect_MQTT() {
         Serial.println((String)"Connecting to MQTT: " + MQTT_SERVER);
-        if (client.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
+        if (MQTTClient.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD)) {
             Serial.println("Connected to MQTT");
         } else {
-            Serial.println((String)"Failed to connect to MQTT with state: " + client.state());
+            Serial.println((String)"Failed to connect to MQTT with state: " + MQTTClient.state());
         }
         Serial.println('\n');
     }
@@ -195,7 +195,7 @@ public:
 
             rack.setFans(inputFanSpeed);
             rack.manualFans = true;                 // Prevent PID calcs, still publish speeds
-            client.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
+            MQTTClient.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
             
             Serial.println((String)"Current PWM = " + inputFanSpeed);
         }
