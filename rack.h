@@ -4,7 +4,6 @@
 #include "zone.h"
 
 #ifndef _Rack_h_
-
 #define _Rack_h_
 
 class Rack
