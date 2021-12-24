@@ -33,18 +33,18 @@ void Rack::reader(Zone &zone)
 **/
 void Rack::printer(String name, Zone zone)
 {
-    Serial.print(name);
-    Serial.print(":\t");
+    //Serial.print(name);
+    //Serial.print(":\t");
     if (zone.online)
     {
-        Serial.print(zone.temp);
-        Serial.print(" *F\t\t");
-        Serial.print(zone.humidity);
-        Serial.println(" %");
+        //Serial.print(zone.temp);
+        //Serial.print(" *F\t\t");
+        //Serial.print(zone.humidity);
+        //Serial.println(" %");
     }
     else
     {
-        Serial.println("Not Connected");
+        //Serial.println("Not Connected");
     }
 }
 
@@ -68,7 +68,7 @@ void Rack::printSensors()
 {
     printer("Inlet", inlet);
     printer("Outlet", outlet);
-    Serial.println("\n");
+    //Serial.println("\n");
 }
 
 /**
@@ -78,13 +78,13 @@ void Rack::printBuff(CircularBuffer<double, 20> &buff)
 {
     for (int i = buff.size() - 1; i >= 0; i--)
     {
-        Serial.print(buff.operator[](i));
+        //Serial.print(buff.operator[](i));
         if (i > 0)
         {
-            Serial.print(", ");
+            //Serial.print(", ");
         }
     }
-    Serial.print("\n");
+    //Serial.print("\n");
 }
 
 /**

@@ -1,3 +1,4 @@
+#include <GDBStub.h>
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -8,8 +9,9 @@
 ESP0 esp0;
 
 void setup() {
+    gdbstub_init();
     delay(2000);    // delay to ensure serial monitor is connected
-    Serial.begin(115200);
+    // //Serial.begin(115200);
 
     esp0.setup();
 }

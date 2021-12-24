@@ -13,29 +13,29 @@ ESP0::ESP0() {}
 void ESP0::connect_wifi()
 {
     WiFi.begin(SSID, WIFI_PASSWORD);
-    Serial.println((String) "Connecting to SSID: " + SSID);
+    //Serial.println((String) "Connecting to SSID: " + SSID);
 
     int i = 0;
     double continueDelay = millis();
     while (WiFi.status() != WL_CONNECTED && ((millis() - continueDelay) < 8000))
     {
         delay(1000);
-        Serial.print((String)++i + "...");
+        //Serial.print((String)++i + "...");
     }
-    Serial.println('\n');
+    //Serial.println('\n');
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        Serial.println((String) "Connected to SSID: " + SSID);
-        // Serial.println((String)"IP Address: " + (String)WiFi.localIP());
-        Serial.print("IP Address: ");
-        Serial.print(WiFi.localIP());
+        //Serial.println((String) "Connected to SSID: " + SSID);
+        // //Serial.println((String)"IP Address: " + (String)WiFi.localIP());
+        //Serial.print("IP Address: ");
+        //Serial.print(WiFi.localIP());
     }
     else
     {
-        Serial.println((String) "Failed to connect to WiFi with state: " + WiFi.status());
+        //Serial.println((String) "Failed to connect to WiFi with state: " + WiFi.status());
     }
-    Serial.println('\n');
+    //Serial.println('\n');
 }
 
 void ESP0::callback(char *topic, uint8_t *payload, unsigned int length)
@@ -44,8 +44,8 @@ void ESP0::callback(char *topic, uint8_t *payload, unsigned int length)
     payload[length] = '\0';                 // Null terminate
     int payloadInt = atoi((char *)payload); // convert payload to int
 
-    Serial.println((String) "Topic: " + topicStr);
-    Serial.println((String) "Payload: " + payloadInt);
+    //Serial.println((String) "Topic: " + topicStr);
+    //Serial.println((String) "Payload: " + payloadInt);
 
     if (topicStr == SUB_MAN_FAN)
     {
@@ -86,7 +86,7 @@ void ESP0::setup()
 
     clientId = "ESP-";
     clientId += system_get_chip_id();
-    Serial.println((String) "clientId: " + clientId);
+    //Serial.println((String) "clientId: " + clientId);
 
     connect_wifi();
 
@@ -156,9 +156,9 @@ void ESP0::loop()
             pid.Compute();
             rack.setFans((int)pidSpeed);
 
-            Serial.print((String) "pidSpeed: " + pidSpeed + "\t");
-            Serial.print((String) "currentTemp: " + currentTemp + "\t");
-            Serial.print((String) "setTemp: " + setTemp + "\n");
+            //Serial.print((String) "pidSpeed: " + pidSpeed + "\t");
+            //Serial.print((String) "currentTemp: " + currentTemp + "\t");
+            //Serial.print((String) "setTemp: " + setTemp + "\n");
         }
     }
 
@@ -171,16 +171,16 @@ void ESP0::loop()
 */
 void ESP0::connect_MQTT()
 {
-    Serial.println((String) "Connecting to MQTT: " + MQTT_SERVER);
+    //Serial.println((String) "Connecting to MQTT: " + MQTT_SERVER);
     if (MQTTClient.connect(clientId.c_str(), MQTT_USER, MQTT_PASSWORD))
     {
-        Serial.println("Connected to MQTT");
+        //Serial.println("Connected to MQTT");
     }
     else
     {
-        Serial.println((String) "Failed to connect to MQTT with state: " + MQTTClient.state());
+        //Serial.println((String) "Failed to connect to MQTT with state: " + MQTTClient.state());
     }
-    Serial.println('\n');
+    //Serial.println('\n');
 }
 
 /*
@@ -188,17 +188,17 @@ void ESP0::connect_MQTT()
 */
 void ESP0::handleSerial()
 {
-    while (Serial.available())
-    {
-        char inputBuffer[6];
-        Serial.readBytesUntil('\n', inputBuffer, 5);
-        int inputFanSpeed = atoi(inputBuffer);
+    // while (Serial.available())
+    // {
+    //     char inputBuffer[6];
+    //     //Serial.readBytesUntil('\n', inputBuffer, 5);
+    //     int inputFanSpeed = atoi(inputBuffer);
 
-        rack.setFans(inputFanSpeed);
-        rack.manualFans = true;                     // Prevent PID calcs, still publish speeds
-        MQTTClient.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
+    //     rack.setFans(inputFanSpeed);
+    //     rack.manualFans = true;                     // Prevent PID calcs, still publish speeds
+    //     MQTTClient.publish(PUB_MAN_FAN_STATE, "0"); // Let HA know it's no longer in control
 
-        Serial.println((String) "Current PWM = " + inputFanSpeed);
-    }
-    Serial.flush();
+    //     //Serial.println((String) "Current PWM = " + inputFanSpeed);
+    // }
+    //Serial.flush();
 }
