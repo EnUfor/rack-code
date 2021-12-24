@@ -1,0 +1,38 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.printWidth": 100,
+    "arduino.path": "C:\\Program Files (x86)\\Arduino",
+    "files.associations": {
+        "xlocale": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "string": "cpp",
+        "algorithm": "cpp",
+        "numeric": "cpp",
+        "*.tpp": "cpp",
+        "sstream": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "xmemory": "cpp",
+        "xiosbase": "cpp",
+        "functional": "cpp",
+        "queue": "cpp",
+        "set": "cpp"
+    },
+    "idf.adapterTargetName": "esp32",
+    "idf.portWin": "COM4",
+    "idf.baudRate": "115200",
+    "idf.openOcdConfigs": [
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "board/esp32-wrover.cfg"
+    ],
+    "search.exclude": {
+        ".build": true
+    },
+    "files.watcherExclude": {
+        ".build": true
+    },
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    }
+}
